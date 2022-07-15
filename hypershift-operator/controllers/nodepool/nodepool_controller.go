@@ -344,6 +344,8 @@ func (r *NodePoolReconciler) reconcile(ctx context.Context, hcluster *hyperv1.Ho
 		ObservedGeneration: nodePool.Generation,
 	})
 
+	log.Info("AMI in nodepool spec is before applying AWS specifics " + nodePool.Spec.Platform.AWS.AMI)
+
 	// Validate platform specific input.
 	var ami string
 	if nodePool.Spec.Platform.Type == hyperv1.AWSPlatform {
@@ -354,6 +356,7 @@ func (r *NodePoolReconciler) reconcile(ctx context.Context, hcluster *hyperv1.Ho
 			ami = nodePool.Spec.Platform.AWS.AMI
 			// User-defined AMIs cannot be validated
 			removeStatusCondition(&nodePool.Status.Conditions, hyperv1.NodePoolValidAMIConditionType)
+		//TODO maybe we don't even need this section?	
 		} else {
 			// TODO: Should the region be included in the NodePool platform information?
 			ami, err = defaultNodePoolAMI(hcluster.Spec.Platform.AWS.Region, releaseImage)
@@ -375,7 +378,10 @@ func (r *NodePoolReconciler) reconcile(ctx context.Context, hcluster *hyperv1.Ho
 				ObservedGeneration: nodePool.Generation,
 			})
 		}
+		//TODO maybe we don't even need this section?
 	}
+
+	log.Info("Bootstrap AMI is after applying AWS specifics " + ami)
 
 	// Validate PowerVS platform specific input.
 	var coreOSPowerVSImage *releaseinfo.CoreOSPowerVSImage

@@ -3,21 +3,30 @@ package aws
 import (
 	"context"
 	"fmt"
+	"os"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	hyperv1 "github.com/openshift/hypershift/api/v1alpha1"
 	"github.com/openshift/hypershift/cmd/nodepool/core"
+	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/common"
+	"github.com/openshift/hypershift/support/releaseinfo"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type AWSPlatformCreateOptions struct {
-	InstanceProfile string
-	SubnetID        string
-	SecurityGroupID string
-	InstanceType    string
-	RootVolumeType  string
-	RootVolumeIOPS  int64
-	RootVolumeSize  int64
+	InstanceProfile    string
+	SubnetID           string
+	SecurityGroupID    string
+	InstanceType       string
+	RootVolumeType     string
+	RootVolumeIOPS     int64
+	RootVolumeSize     int64
+	PullSecretFile     string
+	AWSCredentialsFile string
 }
 
 func NewCreateCommand(coreOpts *core.CreateNodePoolOptions) *cobra.Command {
@@ -40,6 +49,11 @@ func NewCreateCommand(coreOpts *core.CreateNodePoolOptions) *cobra.Command {
 	cmd.Flags().StringVar(&platformOpts.RootVolumeType, "root-volume-type", platformOpts.RootVolumeType, "The type of the root volume (e.g. gp3, io2) for machines in the NodePool")
 	cmd.Flags().Int64Var(&platformOpts.RootVolumeIOPS, "root-volume-iops", platformOpts.RootVolumeIOPS, "The iops of the root volume for machines in the NodePool")
 	cmd.Flags().Int64Var(&platformOpts.RootVolumeSize, "root-volume-size", platformOpts.RootVolumeSize, "The size of the root volume (min: 8) for machines in the NodePool")
+	cmd.Flags().StringVar(&platformOpts.PullSecretFile, "pull-secret", platformOpts.PullSecretFile, "Path to a pull secret")
+	cmd.Flags().StringVar(&platformOpts.AWSCredentialsFile, "aws-creds", platformOpts.AWSCredentialsFile, "File with AWS credentials")
+
+	cmd.MarkFlagRequired("aws-creds")
+	cmd.MarkFlagRequired("pull-secret")
 
 	cmd.RunE = coreOpts.CreateRunFunc(platformOpts)
 
@@ -95,9 +109,88 @@ func (o *AWSPlatformCreateOptions) UpdateNodePool(ctx context.Context, nodePool 
 			IOPS: o.RootVolumeIOPS,
 		},
 	}
+
+
+	//TODO Need to test this new code and see how the common.PullSecret works or not
+	pullSecretBytes, err := os.ReadFile(o.PullSecretFile)
+	if err != nil {
+		return fmt.Errorf("cannot read pull secret file %s: %w", o.PullSecretFile, err)
+	}
+
+	riprovider := &releaseinfo.RegistryClientProvider{}
+	releaseImage, err := releaseinfo.Provider.Lookup(riprovider, ctx, nodePool.Spec.Release.Image, pullSecretBytes)
+	println(releaseImage.Kind)
+
+	if err != nil {
+		return fmt.Errorf("failed to pull the instance architecture type, %s: %v", o.InstanceType, err)
+	}
+
+	pullSecret := common.PullSecret(hcluster.Namespace)
+	releaseImage2, err := releaseinfo.Provider.Lookup(riprovider, ctx, nodePool.Spec.Release.Image, pullSecret.Data[corev1.DockerConfigJsonKey])
+
+	println(releaseImage2.Kind)
+	if err != nil {
+		return fmt.Errorf("failed to pull the instance architecture type, %s: %v", o.InstanceType, err)
+	} else {
+		releaseImageArch, err := getInstanceTypeArch(o.InstanceType, hcluster.Spec.Platform.AWS.Region, releaseImage)
+
+		if err != nil {
+			return fmt.Errorf("failed to pull the instance architecture type, %s: %v", o.InstanceType, err)
+		}
+
+		regionData, hasRegionData := releaseImageArch.Images.AWS.Regions[hcluster.Spec.Platform.AWS.Region]
+		if !hasRegionData {
+			return fmt.Errorf("couldn't find AWS image for region %q", hcluster.Spec.Platform.AWS.Region)
+		}
+		if len(regionData.Image) == 0 {
+			return fmt.Errorf("release image metadata has no image for region %q", hcluster.Spec.Platform.AWS.Region)
+		}
+
+		nodePool.Spec.Platform.AWS.AMI = regionData.Image
+	}
+	//TODO Need to test this new code and see how the common.PullSecret works or not
+
 	return nil
 }
 
 func (o *AWSPlatformCreateOptions) Type() hyperv1.PlatformType {
 	return hyperv1.AWSPlatform
+}
+
+func getInstanceTypeArch(instanceType string, region string, releaseImage *releaseinfo.ReleaseImage) (arch releaseinfo.CoreOSArchitecture, err error) {
+	mySession := session.Must(session.NewSession())
+	svc := ec2.New(mySession, aws.NewConfig().WithRegion(region))
+	input := &ec2.DescribeInstanceTypesInput{
+		InstanceTypes: []*string{aws.String(instanceType)},
+	}
+
+	result, err := svc.DescribeInstanceTypes(input)
+	if err != nil {
+		return releaseinfo.CoreOSArchitecture{}, fmt.Errorf("error occurred trying to find instance type, %s, in region, %s: %s", instanceType, region, err.Error())
+	}
+
+	var archPtr []*string = nil
+	instanceArch := ""
+	if result != nil && result.InstanceTypes != nil {
+		archPtr = result.InstanceTypes[0].ProcessorInfo.SupportedArchitectures
+	} else {
+		return releaseinfo.CoreOSArchitecture{}, fmt.Errorf("could not find instance type in region, %s, for instance type, %q", region, instanceType)
+	}
+
+	if archPtr != nil {
+		instanceArch = *archPtr[0]
+
+		if instanceArch == "arm64" {
+			instanceArch = "aarch64"
+		}
+	} else {
+		return releaseinfo.CoreOSArchitecture{}, fmt.Errorf("couldn't find architecture type for instance type %s", instanceType)
+	}
+
+	arch, foundArch := releaseImage.StreamMetadata.Architectures[instanceArch]
+	if !foundArch {
+		return releaseinfo.CoreOSArchitecture{}, fmt.Errorf("couldn't find OS metadata for architecture %q", instanceArch)
+	}
+
+	return arch, nil
 }
