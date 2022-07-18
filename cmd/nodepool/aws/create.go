@@ -108,7 +108,6 @@ func (o *AWSPlatformCreateOptions) UpdateNodePool(ctx context.Context, nodePool 
 		},
 	}
 
-	//TODO Need to test this new code and see how the common.PullSecret works or not
 	pullSecretBytes, err := os.ReadFile(o.PullSecretFile)
 	if err != nil {
 		return fmt.Errorf("cannot read pull secret file %s: %w", o.PullSecretFile, err)
@@ -140,8 +139,6 @@ func (o *AWSPlatformCreateOptions) UpdateNodePool(ctx context.Context, nodePool 
 
 		nodePool.Spec.Platform.AWS.AMI = regionData.Image
 	}
-	//TODO Need to test this new code and see how the common.PullSecret works or not
-
 	return nil
 }
 
