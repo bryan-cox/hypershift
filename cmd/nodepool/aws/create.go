@@ -117,16 +117,12 @@ func (o *AWSPlatformCreateOptions) UpdateNodePool(ctx context.Context, nodePool 
 	releaseImage, err := releaseinfo.Provider.Lookup(riprovider, ctx, nodePool.Spec.Release.Image, pullSecretBytes)
 
 	if err != nil {
-		return fmt.Errorf("failed to pull the instance architecture type, %s: %v", o.InstanceType, err)
-	}
-
-	if err != nil {
-		return fmt.Errorf("failed to pull the instance architecture type, %s: %v", o.InstanceType, err)
+		return fmt.Errorf("failed to get the release image, %s: %v", o.InstanceType, err)
 	} else {
 		releaseImageArch, err := getInstanceTypeArch(o.InstanceType, hcluster.Spec.Platform.AWS.Region, releaseImage)
 
 		if err != nil {
-			return fmt.Errorf("failed to pull the instance architecture type, %s: %v", o.InstanceType, err)
+			return fmt.Errorf("failed to pull the release image architecture type, %s: %v", o.InstanceType, err)
 		}
 
 		regionData, hasRegionData := releaseImageArch.Images.AWS.Regions[hcluster.Spec.Platform.AWS.Region]
