@@ -10,10 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	hyperv1 "github.com/openshift/hypershift/api/v1alpha1"
 	"github.com/openshift/hypershift/cmd/nodepool/core"
-	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/common"
 	"github.com/openshift/hypershift/support/releaseinfo"
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -110,7 +108,6 @@ func (o *AWSPlatformCreateOptions) UpdateNodePool(ctx context.Context, nodePool 
 		},
 	}
 
-
 	//TODO Need to test this new code and see how the common.PullSecret works or not
 	pullSecretBytes, err := os.ReadFile(o.PullSecretFile)
 	if err != nil {
@@ -119,16 +116,11 @@ func (o *AWSPlatformCreateOptions) UpdateNodePool(ctx context.Context, nodePool 
 
 	riprovider := &releaseinfo.RegistryClientProvider{}
 	releaseImage, err := releaseinfo.Provider.Lookup(riprovider, ctx, nodePool.Spec.Release.Image, pullSecretBytes)
-	println(releaseImage.Kind)
 
 	if err != nil {
 		return fmt.Errorf("failed to pull the instance architecture type, %s: %v", o.InstanceType, err)
 	}
 
-	pullSecret := common.PullSecret(hcluster.Namespace)
-	releaseImage2, err := releaseinfo.Provider.Lookup(riprovider, ctx, nodePool.Spec.Release.Image, pullSecret.Data[corev1.DockerConfigJsonKey])
-
-	println(releaseImage2.Kind)
 	if err != nil {
 		return fmt.Errorf("failed to pull the instance architecture type, %s: %v", o.InstanceType, err)
 	} else {
