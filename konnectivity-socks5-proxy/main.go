@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	socks5 "github.com/armon/go-socks5"
+	"github.com/armon/go-socks5"
 	"github.com/openshift/hypershift/pkg/version"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap/zapcore"
@@ -79,7 +79,7 @@ func NewStartCommand() *cobra.Command {
 				guestClusterResolver: &guestClusterResolver{
 					log:                  l,
 					client:               client,
-					konnektivityDialFunc: dialFunc,
+					konnectivityDialFunc: dialFunc,
 				},
 				log: l,
 			},
@@ -116,7 +116,10 @@ func dialFunc(caCertPath string, clientCertPath string, clientKeyPath string, pr
 		if err != nil {
 			return nil, fmt.Errorf("dialing proxy %q failed: %v", proxyAddress, err)
 		}
-		fmt.Fprintf(proxyConn, "CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", requestAddress, "127.0.0.1")
+		_, err = fmt.Fprintf(proxyConn, "CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", requestAddress, "127.0.0.1")
+		if err != nil {
+			return nil, err
+		}
 		br := bufio.NewReader(proxyConn)
 		res, err := http.ReadResponse(br, nil)
 		if err != nil {
@@ -139,7 +142,7 @@ func dialFunc(caCertPath string, clientCertPath string, clientKeyPath string, pr
 	}
 }
 
-// dialDirect directly connect directly to the target, respecting any local proxy settings from the environment
+// dialDirect directly connect to the target, respecting any local proxy settings from the environment
 func dialDirect(ctx context.Context, network, addr string) (net.Conn, error) {
 	return proxy.Dial(ctx, network, addr)
 }
@@ -147,7 +150,7 @@ func dialDirect(ctx context.Context, network, addr string) (net.Conn, error) {
 type guestClusterResolver struct {
 	log                  logr.Logger
 	client               client.Client
-	konnektivityDialFunc func(ctx context.Context, network string, addr string) (net.Conn, error)
+	konnectivityDialFunc func(ctx context.Context, network string, addr string) (net.Conn, error)
 	resolver             *net.Resolver
 	resolverLock         sync.Mutex
 }
@@ -166,7 +169,7 @@ func (gr *guestClusterResolver) getResolver(ctx context.Context) (*net.Resolver,
 	gr.resolver = &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			return gr.konnektivityDialFunc(ctx, "tcp", clusterDNSAddress)
+			return gr.konnectivityDialFunc(ctx, "tcp", clusterDNSAddress)
 		},
 	}
 
@@ -194,10 +197,10 @@ func (gr *guestClusterResolver) resolve(ctx context.Context, name string) (net.I
 }
 
 // proxyResolver tries to resolve addresses using the following steps in order:
-// 1. Not at all for cloud provider apis, as we do not want to tunnel them through Konnektivity
-// 2. If the address is a valid Kubernetes service and that service exists in the guest cluster, it's clusterIP is returned
-// 2. If --resolve-from-guest-cluster-dns is set, it uses the guest clusters dns. If that fails, an error is returned
-// 4. Lastly, golangs default resolver is used
+// 1. Not at all for cloud provider apis, as we do not want to tunnel them through Konnectivity.
+// 2. If the address is a valid Kubernetes service and that service exists in the guest cluster, it's clusterIP is returned.
+// 3. If --resolve-from-guest-cluster-dns is set, it uses the guest clusters dns. If that fails, an error is returned.
+// 4. Lastly, Golang's default resolver is used.
 type proxyResolver struct {
 	client                  client.Client
 	resolveFromGuestCluster bool
@@ -223,7 +226,8 @@ func (d proxyResolver) Resolve(ctx context.Context, name string) (context.Contex
 		address, err := d.guestClusterResolver.resolve(ctx, name)
 		if err != nil {
 			l.Error(err, "failed to look up address from guest cluster")
-			return ctx, nil, fmt.Errorf("failed to look up name %s from guest cluster cluster-dns: %w", name, err)
+			// TODO Fallback to MC cluster internet
+			return ctx, nil, nil
 		}
 		l.WithValues("address", address.String()).Info("Successfully looked up address from guest cluster")
 		return ctx, address, nil
@@ -260,7 +264,7 @@ func (d proxyResolver) ResolveK8sService(ctx context.Context, l logr.Logger, nam
 	return ctx, ip, nil
 }
 
-// isCloudAPI is a hardcoded list of domains that should not be routed through konnektivity but be reached
+// isCloudAPI is a hardcoded list of domains that should not be routed through Konnectivity but be reached
 // through the management cluster. This is needed to support management clusters with a proxy configuration,
 // as the components themselves already have proxy env vars pointing to the socks proxy (this binary). If we then
 // actually end up proxying or not depends on the env for this binary.
