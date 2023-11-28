@@ -4,3 +4,11 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    groups:
+      dependencies:
+        patterns:
+          - "github*"
+          - "golang*"
+          - "k8s.*"
+          - "sigs.k8s*"
+          - "*"
