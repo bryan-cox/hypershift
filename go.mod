@@ -76,7 +76,7 @@ require (
 	sigs.k8s.io/cluster-api-provider-kubevirt v0.1.8-0.20231020162735-238e1c9560ad
 	sigs.k8s.io/controller-runtime v0.16.2
 	sigs.k8s.io/structured-merge-diff/v4 v4.3.0
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
