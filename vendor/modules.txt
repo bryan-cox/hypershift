@@ -1441,7 +1441,7 @@ sigs.k8s.io/cluster-api-provider-ibmcloud/api/v1beta2
 # sigs.k8s.io/cluster-api-provider-kubevirt v0.1.8-0.20231020162735-238e1c9560ad
 ## explicit; go 1.20
 sigs.k8s.io/cluster-api-provider-kubevirt/api/v1alpha1
-# sigs.k8s.io/controller-runtime v0.16.2
+# sigs.k8s.io/controller-runtime v0.16.3
 ## explicit; go 1.20
 sigs.k8s.io/controller-runtime
 sigs.k8s.io/controller-runtime/pkg/builder
