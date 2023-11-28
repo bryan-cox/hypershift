@@ -8,7 +8,9 @@ updates:
       dependencies:
         patterns:
           - "github*"
+          - "go.uber*"
           - "golang*"
+          - "gopkg.*"
           - "k8s.*"
+          - "kubevirt.*"
           - "sigs.k8s*"
-          - "*"
