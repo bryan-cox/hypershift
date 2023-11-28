@@ -5,20 +5,16 @@ updates:
     schedule:
       interval: "weekly"
     groups:
-      github-dependencies:
+      github dependencies:
         patterns:
           - "github*"
-      golang-dependencies:
+      golang dependencies:
         patterns:
           - "golang*"
-      k8s-dependencies:
+      k8s dependencies:
         patterns:
           - "k8s.*"
           - "sigs.k8s*"
-      misc-dependencies:
+      misc dependencies:
         patterns:
-          - "go.uber*"
-          - "gopkg.*"
-          - "gotest*"
-          - "honnef*"
-          - "kubevirt.*"
+          - "*"
