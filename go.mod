@@ -78,7 +78,7 @@ require (
 	k8s.io/cli-runtime v0.29.0
 	k8s.io/client-go v0.29.0
 	k8s.io/component-base v0.29.0
-	k8s.io/klog/v2 v2.110.1
+	k8s.io/klog/v2 v2.120.0
 	k8s.io/kube-aggregator v0.29.0
 	k8s.io/kube-scheduler v0.29.0
 	k8s.io/kubectl v0.29.0
