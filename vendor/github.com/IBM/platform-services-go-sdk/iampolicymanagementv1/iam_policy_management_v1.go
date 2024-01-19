@@ -1,5 +1,5 @@
 /**
- * (C) Copyright IBM Corp. 2023.
+ * (C) Copyright IBM Corp. 2024.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 /*
- * IBM OpenAPI SDK Code Generator Version: 3.78.0-67aec9b7-20230818-174940
+ * IBM OpenAPI SDK Code Generator Version: 3.84.0-a4533f12-20240103-170852
  */
 
 // Package iampolicymanagementv1 : Operations and models for the IamPolicyManagementV1 service
@@ -277,12 +277,13 @@ func (iamPolicyManagement *IamPolicyManagementV1) ListPoliciesWithContext(ctx co
 // their support of authorization policies. To create an authorization policy, use **`"type": "authorization"`** in the
 // body. The subject attributes must match the supported authorization subjects of the resource. Multiple subject
 // attributes might be provided. The following attributes are supported:
-//   serviceName, serviceInstance, region, resourceType, resource, accountId Assign roles that are supported by the
-// service or platform roles. For more information, see [IAM roles and
+//   serviceName, serviceInstance, region, resourceType, resource, accountId, resourceGroupId Assign roles that are
+// supported by the service or platform roles. For more information, see [IAM roles and
 // actions](/docs/account?topic=account-iam-service-roles-actions). The user must also have the same level of access or
 // greater to the target resource in order to grant the role. Use only the resource attributes supported by the service.
 // To view a service's or the platform's supported attributes, check the [documentation](/docs?tab=all-docs). Both the
-// policy subject and the policy resource must include the **`serviceName`** and **`accountId`** attributes.
+// policy subject and the policy resource must include the **`accountId`** attributes. The policy subject must include
+// either **`serviceName`** or **`resourceGroupId`** (or both) attributes.
 //
 // ### Attribute Operators
 //
@@ -387,19 +388,100 @@ func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyWithContext(ctx co
 // actions](/docs/account?topic=account-iam-service-roles-actions). Use only the resource attributes supported by the
 // service. To view a service's or the platform's supported attributes, check the [documentation](/docs?tab=all-docs).
 // The policy resource must include either the **`serviceType`**, **`serviceName`**,  or **`resourceGroupId`** attribute
-// and the **`accountId`** attribute.` If the subject is a locked service-id, the request will fail.
+// and the **`accountId`** attribute.`
+//
+// In the rule field, you can specify a single condition by using **`key`**, **`value`**, and condition **`operator`**,
+// or a set of **`conditions`** with a combination **`operator`**. The possible combination operators are **`and`** and
+// **`or`**.
+//
+// Currently, we support two types of patterns:
+//
+// 1. `time-based`: Used to specify a time-based restriction
+//
+// Combine conditions to specify a time-based restriction (e.g., access only during business hours, during the
+// Monday-Friday work week). For example, a policy can grant access Monday-Friday, 9:00am-5:00pm using the following
+// rule:
+// ```json
+//   "rule": {
+//     "operator": "and",
+//     "conditions": [{
+//       "key": "{{environment.attributes.day_of_week}}",
+//       "operator": "dayOfWeekAnyOf",
+//       "value": ["1+00:00", "2+00:00", "3+00:00", "4+00:00", "5+00:00"]
+//     },
+//       "key": "{{environment.attributes.current_time}}",
+//       "operator": "timeGreaterThanOrEquals",
+//       "value": "09:00:00+00:00"
+//     },
+//       "key": "{{environment.attributes.current_time}}",
+//       "operator": "timeLessThanOrEquals",
+//       "value": "17:00:00+00:00"
+//     }]
+//   }
+// ``` You can use the following operators in the **`key`** and **`value`** pair:
+// ```
+//   'timeLessThan', 'timeLessThanOrEquals', 'timeGreaterThan', 'timeGreaterThanOrEquals',
+//   'dateTimeLessThan', 'dateTimeLessThanOrEquals', 'dateTimeGreaterThan', 'dateTimeGreaterThanOrEquals',
+//   'dayOfWeekEquals', 'dayOfWeekAnyOf',
+// ``` The pattern field that matches the rule is required when rule is provided. For the business hour rule example
+// above, the **`pattern`** is **`"time-based-conditions:weekly"`**. For more information, see [Time-based conditions
+// operators](/docs/account?topic=account-iam-condition-properties&interface=ui#policy-condition-properties) and
+// [Limiting access with time-based conditions](/docs/account?topic=account-iam-time-based&interface=ui). If the subject
+// is a locked service-id, the request will fail.
+//
+// 2. `attribute-based`: Used to specify a combination of OR/AND based conditions applied on resource attributes.
+//
+// Combine conditions to specify an attribute-based condition using AN/OR-based operators.
+//
+// For example, a policy can grant access based on multiple conditions applied on the resource attributes below:
+// ```json
+//   "pattern": "attribute-based-condition:resource:literal-and-wildcard"
+//   "rule": {
+//       "operator": "or",
+//       "conditions": [
+//         {
+//           "operator": "and",
+//           "conditions": [
+//             {
+//               "key": "{{resource.attributes.prefix}}",
+//               "operator": "stringEquals",
+//               "value": "home/test"
+//             },
+//             {
+//               "key": "{{environment.attributes.delimiter}}",
+//               "operator": "stringEquals",
+//               "value": "/"
+//             }
+//           ]
+//         },
+//         {
+//           "key": "{{resource.attributes.path}}",
+//           "operator": "stringMatch",
+//           "value": "home/David/_*"
+//         }
+//       ]
+//   }
+// ```
+//
+// In addition to satisfying the `resources` section, the policy grants permission only if either the `path` begins with
+// `home/David/` **OR**  the `prefix` is `home/test` and the `delimiter` is `/`. This mechanism helps you consolidate
+// multiple policies in to a single policy,  making policies easier to administer and stay within the policy limit for
+// an account. View the list of operators that can be used in the condition
+// [here](/docs/account?topic=account-wildcard#string-comparisons).
+//
 //
 // ### Authorization
 //
 // To update an authorization policy, use **`"type": "authorization"`** in the body. The subject attributes must match
 // the supported authorization subjects of the resource. Multiple subject attributes might be provided. The following
 // attributes are supported:
-//   serviceName, serviceInstance, region, resourceType, resource, accountId Assign roles that are supported by the
-// service or platform roles. For more information, see [IAM roles and
+//   serviceName, serviceInstance, region, resourceType, resource, accountId, resourceGroupId Assign roles that are
+// supported by the service or platform roles. For more information, see [IAM roles and
 // actions](/docs/account?topic=account-iam-service-roles-actions). The user must also have the same level of access or
 // greater to the target resource in order to grant the role. Use only the resource attributes supported by the service.
 // To view a service's or the platform's supported attributes, check the [documentation](/docs?tab=all-docs). Both the
-// policy subject and the policy resource must include the **`serviceName`** and **`accountId`** attributes.
+// policy subject and the policy resource must include the **`accountId`** attributes. The policy subject must include
+// either **`serviceName`** or **`resourceGroupId`** (or both) attributes.
 //
 // ### Attribute Operators
 //
@@ -1171,6 +1253,20 @@ func (iamPolicyManagement *IamPolicyManagementV1) ListV2PoliciesWithContext(ctx 
 // conditions](https://cloud.ibm.com/docs/account?topic=account-iam-time-based&interface=ui). If the subject is a locked
 // service-id, the request will fail.
 //
+// ### Authorization
+//
+// Authorization policies are supported by services on a case by case basis. Refer to service documentation to verify
+// their support of authorization policies. To create an authorization policy, use **`"type": "authorization"`** in the
+// body. The subject attributes must match the supported authorization subjects of the resource. Multiple subject
+// attributes might be provided. The following attributes are supported:
+//   serviceName, serviceInstance, region, resourceType, resource, accountId, resourceGroupId Assign roles that are
+// supported by the service or platform roles. For more information, see [IAM roles and
+// actions](/docs/account?topic=account-iam-service-roles-actions). The user must also have the same level of access or
+// greater to the target resource in order to grant the role. Use only the resource attributes supported by the service.
+// To view a service's or the platform's supported attributes, check the [documentation](/docs?tab=all-docs). Both the
+// policy subject and the policy resource must include the **`accountId`** attributes. The policy subject must include
+// either **`serviceName`** or **`resourceGroupId`** (or both) attributes.
+//
 // ### Attribute Operators
 //
 // Currently, only the `stringEquals`, `stringMatch`, and `stringEquals` operators are available. For more information,
@@ -1272,7 +1368,7 @@ func (iamPolicyManagement *IamPolicyManagementV1) CreateV2PolicyWithContext(ctx 
 //
 // ### Access
 //
-// To create an access policy, use **`"type": "access"`** in the body. The supported subject attributes are **`iam_id`**
+// To update an access policy, use **`"type": "access"`** in the body. The supported subject attributes are **`iam_id`**
 // and **`access_group_id`**. Use the **`iam_id`** subject attribute to assign access to a user or service-id. Use the
 // **`access_group_id`** subject attribute to assign access to an access group. Assign roles that are supported by the
 // service or platform roles. For more information, see [IAM roles and
@@ -1312,6 +1408,20 @@ func (iamPolicyManagement *IamPolicyManagementV1) CreateV2PolicyWithContext(ctx 
 // and
 // [Limiting access with time-based
 // conditions](https://cloud.ibm.com/docs/account?topic=account-iam-time-based&interface=ui).
+//
+// ### Authorization
+//
+// To update an authorization policy, use **`"type": "authorization"`** in the body. The subject attributes must match
+// the supported authorization subjects of the resource. Multiple subject attributes might be provided. The following
+// attributes are supported:
+//   serviceName, serviceInstance, region, resourceType, resource, accountId, resourceGroupId Assign roles that are
+// supported by the service or platform roles. For more information, see [IAM roles and
+// actions](/docs/account?topic=account-iam-service-roles-actions). The user must also have the same level of access or
+// greater to the target resource in order to grant the role. Use only the resource attributes supported by the service.
+// To view a service's or the platform's supported attributes, check the [documentation](/docs?tab=all-docs). Both the
+// policy subject and the policy resource must include the **`accountId`** attributes. The policy subject must include
+// either **`serviceName`** or **`resourceGroupId`** (or both) attributes.
+//
 // ### Attribute Operators
 //
 // Currently, only the `stringEquals`, `stringMatch`, and `stringEquals` operators are available. For more information,
@@ -1567,6 +1677,9 @@ func (iamPolicyManagement *IamPolicyManagementV1) ListPolicyTemplatesWithContext
 	}
 
 	builder.AddQuery("account_id", fmt.Sprint(*listPolicyTemplatesOptions.AccountID))
+	if listPolicyTemplatesOptions.State != nil {
+		builder.AddQuery("state", fmt.Sprint(*listPolicyTemplatesOptions.State))
+	}
 
 	request, err := builder.Build()
 	if err != nil {
@@ -1592,12 +1705,12 @@ func (iamPolicyManagement *IamPolicyManagementV1) ListPolicyTemplatesWithContext
 // CreatePolicyTemplate : Create a policy template
 // Create a policy template. Policy templates define a policy without requiring a subject, and you can use them to grant
 // access to multiple subjects.
-func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplate(createPolicyTemplateOptions *CreatePolicyTemplateOptions) (result *PolicyTemplate, response *core.DetailedResponse, err error) {
+func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplate(createPolicyTemplateOptions *CreatePolicyTemplateOptions) (result *PolicyTemplateLimitData, response *core.DetailedResponse, err error) {
 	return iamPolicyManagement.CreatePolicyTemplateWithContext(context.Background(), createPolicyTemplateOptions)
 }
 
 // CreatePolicyTemplateWithContext is an alternate form of the CreatePolicyTemplate method which supports a Context parameter
-func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplateWithContext(ctx context.Context, createPolicyTemplateOptions *CreatePolicyTemplateOptions) (result *PolicyTemplate, response *core.DetailedResponse, err error) {
+func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplateWithContext(ctx context.Context, createPolicyTemplateOptions *CreatePolicyTemplateOptions) (result *PolicyTemplateLimitData, response *core.DetailedResponse, err error) {
 	err = core.ValidateNotNil(createPolicyTemplateOptions, "createPolicyTemplateOptions cannot be nil")
 	if err != nil {
 		return
@@ -1661,7 +1774,7 @@ func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplateWithContex
 		return
 	}
 	if rawResponse != nil {
-		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalPolicyTemplate)
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalPolicyTemplateLimitData)
 		if err != nil {
 			return
 		}
@@ -1709,6 +1822,10 @@ func (iamPolicyManagement *IamPolicyManagementV1) GetPolicyTemplateWithContext(c
 		builder.AddHeader(headerName, headerValue)
 	}
 	builder.AddHeader("Accept", "application/json")
+
+	if getPolicyTemplateOptions.State != nil {
+		builder.AddQuery("state", fmt.Sprint(*getPolicyTemplateOptions.State))
+	}
 
 	request, err := builder.Build()
 	if err != nil {
@@ -1784,12 +1901,12 @@ func (iamPolicyManagement *IamPolicyManagementV1) DeletePolicyTemplateWithContex
 // CreatePolicyTemplateVersion : Create a new policy template version
 // Create a new version of a policy template. Use this if you need to make updates to a policy template that is
 // committed.
-func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplateVersion(createPolicyTemplateVersionOptions *CreatePolicyTemplateVersionOptions) (result *PolicyTemplate, response *core.DetailedResponse, err error) {
+func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplateVersion(createPolicyTemplateVersionOptions *CreatePolicyTemplateVersionOptions) (result *PolicyTemplateLimitData, response *core.DetailedResponse, err error) {
 	return iamPolicyManagement.CreatePolicyTemplateVersionWithContext(context.Background(), createPolicyTemplateVersionOptions)
 }
 
 // CreatePolicyTemplateVersionWithContext is an alternate form of the CreatePolicyTemplateVersion method which supports a Context parameter
-func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplateVersionWithContext(ctx context.Context, createPolicyTemplateVersionOptions *CreatePolicyTemplateVersionOptions) (result *PolicyTemplate, response *core.DetailedResponse, err error) {
+func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplateVersionWithContext(ctx context.Context, createPolicyTemplateVersionOptions *CreatePolicyTemplateVersionOptions) (result *PolicyTemplateLimitData, response *core.DetailedResponse, err error) {
 	err = core.ValidateNotNil(createPolicyTemplateVersionOptions, "createPolicyTemplateVersionOptions cannot be nil")
 	if err != nil {
 		return
@@ -1851,7 +1968,7 @@ func (iamPolicyManagement *IamPolicyManagementV1) CreatePolicyTemplateVersionWit
 		return
 	}
 	if rawResponse != nil {
-		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalPolicyTemplate)
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalPolicyTemplateLimitData)
 		if err != nil {
 			return
 		}
@@ -1899,6 +2016,10 @@ func (iamPolicyManagement *IamPolicyManagementV1) ListPolicyTemplateVersionsWith
 		builder.AddHeader(headerName, headerValue)
 	}
 	builder.AddHeader("Accept", "application/json")
+
+	if listPolicyTemplateVersionsOptions.State != nil {
+		builder.AddQuery("state", fmt.Sprint(*listPolicyTemplateVersionsOptions.State))
+	}
 
 	request, err := builder.Build()
 	if err != nil {
@@ -3349,9 +3470,19 @@ type GetPolicyTemplateOptions struct {
 	// The policy template ID.
 	PolicyTemplateID *string `json:"policy_template_id" validate:"required,ne="`
 
+	// The policy template state.
+	State *string `json:"state,omitempty"`
+
 	// Allows users to set headers on API requests
 	Headers map[string]string
 }
+
+// Constants associated with the GetPolicyTemplateOptions.State property.
+// The policy template state.
+const (
+	GetPolicyTemplateOptionsStateActiveConst = "active"
+	GetPolicyTemplateOptionsStateDeletedConst = "deleted"
+)
 
 // NewGetPolicyTemplateOptions : Instantiate GetPolicyTemplateOptions
 func (*IamPolicyManagementV1) NewGetPolicyTemplateOptions(policyTemplateID string) *GetPolicyTemplateOptions {
@@ -3363,6 +3494,12 @@ func (*IamPolicyManagementV1) NewGetPolicyTemplateOptions(policyTemplateID strin
 // SetPolicyTemplateID : Allow user to set PolicyTemplateID
 func (_options *GetPolicyTemplateOptions) SetPolicyTemplateID(policyTemplateID string) *GetPolicyTemplateOptions {
 	_options.PolicyTemplateID = core.StringPtr(policyTemplateID)
+	return _options
+}
+
+// SetState : Allow user to set State
+func (_options *GetPolicyTemplateOptions) SetState(state string) *GetPolicyTemplateOptions {
+	_options.State = core.StringPtr(state)
 	return _options
 }
 
@@ -3526,6 +3663,30 @@ type GrantWithEnrichedRoles struct {
 func UnmarshalGrantWithEnrichedRoles(m map[string]json.RawMessage, result interface{}) (err error) {
 	obj := new(GrantWithEnrichedRoles)
 	err = core.UnmarshalModel(m, "roles", &obj.Roles, UnmarshalEnrichedRoles)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// LimitData : policy template current and limit details with in an account.
+type LimitData struct {
+	// policy template current count.
+	Current *int64 `json:"current,omitempty"`
+
+	// policy template limit count.
+	Limit *int64 `json:"limit,omitempty"`
+}
+
+// UnmarshalLimitData unmarshals an instance of LimitData from the specified map of raw messages.
+func UnmarshalLimitData(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(LimitData)
+	err = core.UnmarshalPrimitive(m, "current", &obj.Current)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "limit", &obj.Limit)
 	if err != nil {
 		return
 	}
@@ -3786,9 +3947,19 @@ type ListPolicyTemplateVersionsOptions struct {
 	// The policy template ID.
 	PolicyTemplateID *string `json:"policy_template_id" validate:"required,ne="`
 
+	// The policy template state.
+	State *string `json:"state,omitempty"`
+
 	// Allows users to set headers on API requests
 	Headers map[string]string
 }
+
+// Constants associated with the ListPolicyTemplateVersionsOptions.State property.
+// The policy template state.
+const (
+	ListPolicyTemplateVersionsOptionsStateActiveConst = "active"
+	ListPolicyTemplateVersionsOptionsStateDeletedConst = "deleted"
+)
 
 // NewListPolicyTemplateVersionsOptions : Instantiate ListPolicyTemplateVersionsOptions
 func (*IamPolicyManagementV1) NewListPolicyTemplateVersionsOptions(policyTemplateID string) *ListPolicyTemplateVersionsOptions {
@@ -3800,6 +3971,12 @@ func (*IamPolicyManagementV1) NewListPolicyTemplateVersionsOptions(policyTemplat
 // SetPolicyTemplateID : Allow user to set PolicyTemplateID
 func (_options *ListPolicyTemplateVersionsOptions) SetPolicyTemplateID(policyTemplateID string) *ListPolicyTemplateVersionsOptions {
 	_options.PolicyTemplateID = core.StringPtr(policyTemplateID)
+	return _options
+}
+
+// SetState : Allow user to set State
+func (_options *ListPolicyTemplateVersionsOptions) SetState(state string) *ListPolicyTemplateVersionsOptions {
+	_options.State = core.StringPtr(state)
 	return _options
 }
 
@@ -3828,9 +4005,19 @@ type ListPolicyTemplatesOptions struct {
 	// * `zh-tw` - (Chinese, Taiwan).
 	AcceptLanguage *string `json:"Accept-Language,omitempty"`
 
+	// The policy template state.
+	State *string `json:"state,omitempty"`
+
 	// Allows users to set headers on API requests
 	Headers map[string]string
 }
+
+// Constants associated with the ListPolicyTemplatesOptions.State property.
+// The policy template state.
+const (
+	ListPolicyTemplatesOptionsStateActiveConst = "active"
+	ListPolicyTemplatesOptionsStateDeletedConst = "deleted"
+)
 
 // NewListPolicyTemplatesOptions : Instantiate ListPolicyTemplatesOptions
 func (*IamPolicyManagementV1) NewListPolicyTemplatesOptions(accountID string) *ListPolicyTemplatesOptions {
@@ -3848,6 +4035,12 @@ func (_options *ListPolicyTemplatesOptions) SetAccountID(accountID string) *List
 // SetAcceptLanguage : Allow user to set AcceptLanguage
 func (_options *ListPolicyTemplatesOptions) SetAcceptLanguage(acceptLanguage string) *ListPolicyTemplatesOptions {
 	_options.AcceptLanguage = core.StringPtr(acceptLanguage)
+	return _options
+}
+
+// SetState : Allow user to set State
+func (_options *ListPolicyTemplatesOptions) SetState(state string) *ListPolicyTemplatesOptions {
+	_options.State = core.StringPtr(state)
 	return _options
 }
 
@@ -4119,6 +4312,71 @@ func (_options *ListV2PoliciesOptions) SetState(state string) *ListV2PoliciesOpt
 func (options *ListV2PoliciesOptions) SetHeaders(param map[string]string) *ListV2PoliciesOptions {
 	options.Headers = param
 	return options
+}
+
+// NestedCondition : Condition that specifies additional conditions or RuleAttribute to grant access.
+// Models which "extend" this model:
+// - NestedConditionRuleAttribute
+// - NestedConditionRuleWithConditions
+type NestedCondition struct {
+	// The name of an attribute.
+	Key *string `json:"key,omitempty"`
+
+	// The operator of an attribute.
+	Operator *string `json:"operator,omitempty"`
+
+	// The value of a rule or resource attribute; can be boolean or string for resource attribute. Can be string or an
+	// array of strings (e.g., array of days to permit access) for rule attribute.
+	Value interface{} `json:"value,omitempty"`
+
+	// List of conditions associated with a policy, e.g., time-based conditions that grant access over a certain time
+	// period.
+	Conditions []RuleAttribute `json:"conditions,omitempty"`
+}
+
+// Constants associated with the NestedCondition.Operator property.
+// The operator of an attribute.
+const (
+	NestedConditionOperatorDatetimegreaterthanConst = "dateTimeGreaterThan"
+	NestedConditionOperatorDatetimegreaterthanorequalsConst = "dateTimeGreaterThanOrEquals"
+	NestedConditionOperatorDatetimelessthanConst = "dateTimeLessThan"
+	NestedConditionOperatorDatetimelessthanorequalsConst = "dateTimeLessThanOrEquals"
+	NestedConditionOperatorDayofweekanyofConst = "dayOfWeekAnyOf"
+	NestedConditionOperatorDayofweekequalsConst = "dayOfWeekEquals"
+	NestedConditionOperatorTimegreaterthanConst = "timeGreaterThan"
+	NestedConditionOperatorTimegreaterthanorequalsConst = "timeGreaterThanOrEquals"
+	NestedConditionOperatorTimelessthanConst = "timeLessThan"
+	NestedConditionOperatorTimelessthanorequalsConst = "timeLessThanOrEquals"
+)
+func (*NestedCondition) isaNestedCondition() bool {
+	return true
+}
+
+type NestedConditionIntf interface {
+	isaNestedCondition() bool
+}
+
+// UnmarshalNestedCondition unmarshals an instance of NestedCondition from the specified map of raw messages.
+func UnmarshalNestedCondition(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(NestedCondition)
+	err = core.UnmarshalPrimitive(m, "key", &obj.Key)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "operator", &obj.Operator)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "value", &obj.Value)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalModel(m, "conditions", &obj.Conditions, UnmarshalRuleAttribute)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
 }
 
 // Policy : The core set of properties associated with a policy.
@@ -4579,6 +4837,9 @@ type PolicyTemplate struct {
 	// The core set of properties associated with the template's policy objet.
 	Policy *TemplatePolicy `json:"policy" validate:"required"`
 
+	// State of policy template.
+	State *string `json:"state,omitempty"`
+
 	// The policy template ID.
 	ID *string `json:"id,omitempty"`
 
@@ -4597,6 +4858,13 @@ type PolicyTemplate struct {
 	// The iam ID of the entity that last modified the policy template.
 	LastModifiedByID *string `json:"last_modified_by_id,omitempty"`
 }
+
+// Constants associated with the PolicyTemplate.State property.
+// State of policy template.
+const (
+	PolicyTemplateStateActiveConst = "active"
+	PolicyTemplateStateDeletedConst = "deleted"
+)
 
 // UnmarshalPolicyTemplate unmarshals an instance of PolicyTemplate from the specified map of raw messages.
 func UnmarshalPolicyTemplate(m map[string]json.RawMessage, result interface{}) (err error) {
@@ -4622,6 +4890,10 @@ func UnmarshalPolicyTemplate(m map[string]json.RawMessage, result interface{}) (
 		return
 	}
 	err = core.UnmarshalModel(m, "policy", &obj.Policy, UnmarshalTemplatePolicy)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "state", &obj.State)
 	if err != nil {
 		return
 	}
@@ -4680,6 +4952,123 @@ type PolicyTemplateCollection struct {
 func UnmarshalPolicyTemplateCollection(m map[string]json.RawMessage, result interface{}) (err error) {
 	obj := new(PolicyTemplateCollection)
 	err = core.UnmarshalModel(m, "policy_templates", &obj.PolicyTemplates, UnmarshalPolicyTemplate)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// PolicyTemplateLimitData : The core set of properties associated with the policy template.
+type PolicyTemplateLimitData struct {
+	// Required field when creating a new template. Otherwise this field is optional. If the field is included it will
+	// change the name value for all existing versions of the template.
+	Name *string `json:"name" validate:"required"`
+
+	// Description of the policy template. This is shown to users in the enterprise account. Use this to describe the
+	// purpose or context of the policy for enterprise users managing IAM templates.
+	Description *string `json:"description,omitempty"`
+
+	// Enterprise account ID where this template will be created.
+	AccountID *string `json:"account_id" validate:"required"`
+
+	// Template version.
+	Version *string `json:"version" validate:"required"`
+
+	// Committed status of the template version.
+	Committed *bool `json:"committed,omitempty"`
+
+	// The core set of properties associated with the template's policy objet.
+	Policy *TemplatePolicy `json:"policy" validate:"required"`
+
+	// State of policy template.
+	State *string `json:"state,omitempty"`
+
+	// The policy template ID.
+	ID *string `json:"id,omitempty"`
+
+	// The href URL that links to the policy templates API by policy template ID.
+	Href *string `json:"href,omitempty"`
+
+	// The UTC timestamp when the policy template was created.
+	CreatedAt *strfmt.DateTime `json:"created_at,omitempty"`
+
+	// The iam ID of the entity that created the policy template.
+	CreatedByID *string `json:"created_by_id,omitempty"`
+
+	// The UTC timestamp when the policy template was last modified.
+	LastModifiedAt *strfmt.DateTime `json:"last_modified_at,omitempty"`
+
+	// The iam ID of the entity that last modified the policy template.
+	LastModifiedByID *string `json:"last_modified_by_id,omitempty"`
+
+	// policy template count details.
+	Counts *TemplateCountData `json:"counts,omitempty"`
+}
+
+// Constants associated with the PolicyTemplateLimitData.State property.
+// State of policy template.
+const (
+	PolicyTemplateLimitDataStateActiveConst = "active"
+	PolicyTemplateLimitDataStateDeletedConst = "deleted"
+)
+
+// UnmarshalPolicyTemplateLimitData unmarshals an instance of PolicyTemplateLimitData from the specified map of raw messages.
+func UnmarshalPolicyTemplateLimitData(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(PolicyTemplateLimitData)
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "description", &obj.Description)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "account_id", &obj.AccountID)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "version", &obj.Version)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "committed", &obj.Committed)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalModel(m, "policy", &obj.Policy, UnmarshalTemplatePolicy)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "state", &obj.State)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "href", &obj.Href)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "created_at", &obj.CreatedAt)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "created_by_id", &obj.CreatedByID)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "last_modified_at", &obj.LastModifiedAt)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "last_modified_by_id", &obj.LastModifiedByID)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalModel(m, "counts", &obj.Counts, UnmarshalTemplateCountData)
 	if err != nil {
 		return
 	}
@@ -5483,6 +5872,30 @@ func UnmarshalSubjectAttribute(m map[string]json.RawMessage, result interface{})
 	return
 }
 
+// TemplateCountData : policy template count details.
+type TemplateCountData struct {
+	// policy template current and limit details with in an account.
+	Template *LimitData `json:"template,omitempty"`
+
+	// policy template current and limit details with in an account.
+	Version *LimitData `json:"version,omitempty"`
+}
+
+// UnmarshalTemplateCountData unmarshals an instance of TemplateCountData from the specified map of raw messages.
+func UnmarshalTemplateCountData(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(TemplateCountData)
+	err = core.UnmarshalModel(m, "template", &obj.Template, UnmarshalLimitData)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalModel(m, "version", &obj.Version, UnmarshalLimitData)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // TemplateMetadata : The details of the IAM template that was used to create an enterprise-managed policy in your account. When returned,
 // this indicates that the policy is created from and managed by a template in the root enterprise account.
 type TemplateMetadata struct {
@@ -5945,7 +6358,7 @@ func UnmarshalV2PolicyResourceTag(m map[string]json.RawMessage, result interface
 // V2PolicyRule : Additional access conditions associated with the policy.
 // Models which "extend" this model:
 // - V2PolicyRuleRuleAttribute
-// - V2PolicyRuleRuleWithConditions
+// - V2PolicyRuleRuleWithNestedConditions
 type V2PolicyRule struct {
 	// The name of an attribute.
 	Key *string `json:"key,omitempty"`
@@ -5959,7 +6372,7 @@ type V2PolicyRule struct {
 
 	// List of conditions associated with a policy, e.g., time-based conditions that grant access over a certain time
 	// period.
-	Conditions []RuleAttribute `json:"conditions,omitempty"`
+	Conditions []NestedConditionIntf `json:"conditions,omitempty"`
 }
 
 // Constants associated with the V2PolicyRule.Operator property.
@@ -5999,7 +6412,7 @@ func UnmarshalV2PolicyRule(m map[string]json.RawMessage, result interface{}) (er
 	if err != nil {
 		return
 	}
-	err = core.UnmarshalModel(m, "conditions", &obj.Conditions, UnmarshalRuleAttribute)
+	err = core.UnmarshalModel(m, "conditions", &obj.Conditions, UnmarshalNestedCondition)
 	if err != nil {
 		return
 	}
@@ -6270,6 +6683,116 @@ func UnmarshalControlResponseControlWithEnrichedRoles(m map[string]json.RawMessa
 	return
 }
 
+// NestedConditionRuleAttribute : Rule that specifies additional access granted (e.g., time-based condition).
+// This model "extends" NestedCondition
+type NestedConditionRuleAttribute struct {
+	// The name of an attribute.
+	Key *string `json:"key" validate:"required"`
+
+	// The operator of an attribute.
+	Operator *string `json:"operator" validate:"required"`
+
+	// The value of a rule or resource attribute; can be boolean or string for resource attribute. Can be string or an
+	// array of strings (e.g., array of days to permit access) for rule attribute.
+	Value interface{} `json:"value" validate:"required"`
+}
+
+// Constants associated with the NestedConditionRuleAttribute.Operator property.
+// The operator of an attribute.
+const (
+	NestedConditionRuleAttributeOperatorDatetimegreaterthanConst = "dateTimeGreaterThan"
+	NestedConditionRuleAttributeOperatorDatetimegreaterthanorequalsConst = "dateTimeGreaterThanOrEquals"
+	NestedConditionRuleAttributeOperatorDatetimelessthanConst = "dateTimeLessThan"
+	NestedConditionRuleAttributeOperatorDatetimelessthanorequalsConst = "dateTimeLessThanOrEquals"
+	NestedConditionRuleAttributeOperatorDayofweekanyofConst = "dayOfWeekAnyOf"
+	NestedConditionRuleAttributeOperatorDayofweekequalsConst = "dayOfWeekEquals"
+	NestedConditionRuleAttributeOperatorTimegreaterthanConst = "timeGreaterThan"
+	NestedConditionRuleAttributeOperatorTimegreaterthanorequalsConst = "timeGreaterThanOrEquals"
+	NestedConditionRuleAttributeOperatorTimelessthanConst = "timeLessThan"
+	NestedConditionRuleAttributeOperatorTimelessthanorequalsConst = "timeLessThanOrEquals"
+)
+
+// NewNestedConditionRuleAttribute : Instantiate NestedConditionRuleAttribute (Generic Model Constructor)
+func (*IamPolicyManagementV1) NewNestedConditionRuleAttribute(key string, operator string, value interface{}) (_model *NestedConditionRuleAttribute, err error) {
+	_model = &NestedConditionRuleAttribute{
+		Key: core.StringPtr(key),
+		Operator: core.StringPtr(operator),
+		Value: value,
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	return
+}
+
+func (*NestedConditionRuleAttribute) isaNestedCondition() bool {
+	return true
+}
+
+// UnmarshalNestedConditionRuleAttribute unmarshals an instance of NestedConditionRuleAttribute from the specified map of raw messages.
+func UnmarshalNestedConditionRuleAttribute(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(NestedConditionRuleAttribute)
+	err = core.UnmarshalPrimitive(m, "key", &obj.Key)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "operator", &obj.Operator)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "value", &obj.Value)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// NestedConditionRuleWithConditions : Rule that specifies additional access granted (e.g., time-based condition) accross multiple conditions.
+// This model "extends" NestedCondition
+type NestedConditionRuleWithConditions struct {
+	// Operator to evaluate conditions.
+	Operator *string `json:"operator" validate:"required"`
+
+	// List of conditions associated with a policy, e.g., time-based conditions that grant access over a certain time
+	// period.
+	Conditions []RuleAttribute `json:"conditions" validate:"required"`
+}
+
+// Constants associated with the NestedConditionRuleWithConditions.Operator property.
+// Operator to evaluate conditions.
+const (
+	NestedConditionRuleWithConditionsOperatorAndConst = "and"
+	NestedConditionRuleWithConditionsOperatorOrConst = "or"
+)
+
+// NewNestedConditionRuleWithConditions : Instantiate NestedConditionRuleWithConditions (Generic Model Constructor)
+func (*IamPolicyManagementV1) NewNestedConditionRuleWithConditions(operator string, conditions []RuleAttribute) (_model *NestedConditionRuleWithConditions, err error) {
+	_model = &NestedConditionRuleWithConditions{
+		Operator: core.StringPtr(operator),
+		Conditions: conditions,
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	return
+}
+
+func (*NestedConditionRuleWithConditions) isaNestedCondition() bool {
+	return true
+}
+
+// UnmarshalNestedConditionRuleWithConditions unmarshals an instance of NestedConditionRuleWithConditions from the specified map of raw messages.
+func UnmarshalNestedConditionRuleWithConditions(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(NestedConditionRuleWithConditions)
+	err = core.UnmarshalPrimitive(m, "operator", &obj.Operator)
+	if err != nil {
+		return
+	}
+	err = core.UnmarshalModel(m, "conditions", &obj.Conditions, UnmarshalRuleAttribute)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // V2PolicyRuleRuleAttribute : Rule that specifies additional access granted (e.g., time-based condition).
 // This model "extends" V2PolicyRule
 type V2PolicyRuleRuleAttribute struct {
@@ -6333,27 +6856,27 @@ func UnmarshalV2PolicyRuleRuleAttribute(m map[string]json.RawMessage, result int
 	return
 }
 
-// V2PolicyRuleRuleWithConditions : Rule that specifies additional access granted (e.g., time-based condition) accross multiple conditions.
+// V2PolicyRuleRuleWithNestedConditions : Rule that specifies additional access granted (e.g., time-based condition) accross multiple conditions.
 // This model "extends" V2PolicyRule
-type V2PolicyRuleRuleWithConditions struct {
+type V2PolicyRuleRuleWithNestedConditions struct {
 	// Operator to evaluate conditions.
 	Operator *string `json:"operator" validate:"required"`
 
 	// List of conditions associated with a policy, e.g., time-based conditions that grant access over a certain time
 	// period.
-	Conditions []RuleAttribute `json:"conditions" validate:"required"`
+	Conditions []NestedConditionIntf `json:"conditions" validate:"required"`
 }
 
-// Constants associated with the V2PolicyRuleRuleWithConditions.Operator property.
+// Constants associated with the V2PolicyRuleRuleWithNestedConditions.Operator property.
 // Operator to evaluate conditions.
 const (
-	V2PolicyRuleRuleWithConditionsOperatorAndConst = "and"
-	V2PolicyRuleRuleWithConditionsOperatorOrConst = "or"
+	V2PolicyRuleRuleWithNestedConditionsOperatorAndConst = "and"
+	V2PolicyRuleRuleWithNestedConditionsOperatorOrConst = "or"
 )
 
-// NewV2PolicyRuleRuleWithConditions : Instantiate V2PolicyRuleRuleWithConditions (Generic Model Constructor)
-func (*IamPolicyManagementV1) NewV2PolicyRuleRuleWithConditions(operator string, conditions []RuleAttribute) (_model *V2PolicyRuleRuleWithConditions, err error) {
-	_model = &V2PolicyRuleRuleWithConditions{
+// NewV2PolicyRuleRuleWithNestedConditions : Instantiate V2PolicyRuleRuleWithNestedConditions (Generic Model Constructor)
+func (*IamPolicyManagementV1) NewV2PolicyRuleRuleWithNestedConditions(operator string, conditions []NestedConditionIntf) (_model *V2PolicyRuleRuleWithNestedConditions, err error) {
+	_model = &V2PolicyRuleRuleWithNestedConditions{
 		Operator: core.StringPtr(operator),
 		Conditions: conditions,
 	}
@@ -6361,18 +6884,18 @@ func (*IamPolicyManagementV1) NewV2PolicyRuleRuleWithConditions(operator string,
 	return
 }
 
-func (*V2PolicyRuleRuleWithConditions) isaV2PolicyRule() bool {
+func (*V2PolicyRuleRuleWithNestedConditions) isaV2PolicyRule() bool {
 	return true
 }
 
-// UnmarshalV2PolicyRuleRuleWithConditions unmarshals an instance of V2PolicyRuleRuleWithConditions from the specified map of raw messages.
-func UnmarshalV2PolicyRuleRuleWithConditions(m map[string]json.RawMessage, result interface{}) (err error) {
-	obj := new(V2PolicyRuleRuleWithConditions)
+// UnmarshalV2PolicyRuleRuleWithNestedConditions unmarshals an instance of V2PolicyRuleRuleWithNestedConditions from the specified map of raw messages.
+func UnmarshalV2PolicyRuleRuleWithNestedConditions(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(V2PolicyRuleRuleWithNestedConditions)
 	err = core.UnmarshalPrimitive(m, "operator", &obj.Operator)
 	if err != nil {
 		return
 	}
-	err = core.UnmarshalModel(m, "conditions", &obj.Conditions, UnmarshalRuleAttribute)
+	err = core.UnmarshalModel(m, "conditions", &obj.Conditions, UnmarshalNestedCondition)
 	if err != nil {
 		return
 	}
