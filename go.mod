@@ -90,10 +90,10 @@ require (
 	sigs.k8s.io/apiserver-network-proxy v0.29.0
 	sigs.k8s.io/cluster-api v1.6.1
 	sigs.k8s.io/cluster-api-provider-aws/v2 v2.3.1
-	sigs.k8s.io/cluster-api-provider-azure v1.13.0
+	sigs.k8s.io/cluster-api-provider-azure v1.13.1
 	sigs.k8s.io/cluster-api-provider-ibmcloud v0.7.0
 	sigs.k8s.io/cluster-api-provider-kubevirt v0.1.8
-	sigs.k8s.io/controller-runtime v0.17.0
+	sigs.k8s.io/controller-runtime v0.17.1
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1
 	sigs.k8s.io/yaml v1.4.0
 )
