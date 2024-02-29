@@ -16,7 +16,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.1.0
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/IBM-Cloud/power-go-client v1.5.9
-	github.com/IBM/go-sdk-core/v5 v5.15.1
+	github.com/IBM/go-sdk-core/v5 v5.15.3
 	github.com/IBM/ibm-cos-sdk-go v1.10.2
 	github.com/IBM/networking-go-sdk v0.44.0
 	github.com/IBM/platform-services-go-sdk v0.56.4
@@ -28,7 +28,7 @@ require (
 	github.com/coreos/ignition/v2 v2.17.0
 	github.com/docker/distribution v2.8.3+incompatible
 	github.com/evanphx/json-patch/v5 v5.9.0
-	github.com/go-jose/go-jose/v3 v3.0.1
+	github.com/go-jose/go-jose/v3 v3.0.2
 	github.com/go-logr/logr v1.4.1
 	github.com/go-logr/zapr v1.3.0
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
@@ -52,9 +52,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/ppc64le-cloud/powervs-utils v0.0.0-20230306072409-bc42a581099f
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.2
-	github.com/prometheus/client_golang v1.18.0
+	github.com/prometheus/client_golang v1.19.0
 	github.com/prometheus/client_model v0.6.0
-	github.com/prometheus/common v0.47.0
+	github.com/prometheus/common v0.48.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tombuildsstuff/giovanni v0.18.0
@@ -65,7 +65,7 @@ require (
 	go.etcd.io/etcd/server/v3 v3.5.12
 	go.etcd.io/etcd/tests/v3 v3.5.12
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.19.0
+	golang.org/x/crypto v0.20.0
 	golang.org/x/net v0.21.0
 	golang.org/x/sync v0.6.0
 	golang.org/x/time v0.5.0
@@ -86,10 +86,10 @@ require (
 	k8s.io/pod-security-admission v0.29.2
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 	kubevirt.io/api v1.1.1
-	kubevirt.io/containerized-data-importer-api v1.57.0
+	kubevirt.io/containerized-data-importer-api v1.58.1
 	sigs.k8s.io/apiserver-network-proxy v0.29.0
 	sigs.k8s.io/cluster-api v1.6.2
-	sigs.k8s.io/cluster-api-provider-aws/v2 v2.3.4
+	sigs.k8s.io/cluster-api-provider-aws/v2 v2.4.0
 	sigs.k8s.io/cluster-api-provider-azure v1.13.2
 	sigs.k8s.io/cluster-api-provider-ibmcloud v0.7.0
 	sigs.k8s.io/cluster-api-provider-kubevirt v0.1.8
