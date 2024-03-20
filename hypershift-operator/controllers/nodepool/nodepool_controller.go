@@ -481,15 +481,15 @@ func (r *NodePoolReconciler) reconcile(ctx context.Context, hcluster *hyperv1.Ho
 	})
 
 	// Validate modifying CPU arch support for platform
-	if (nodePool.Spec.Arch != "amd64") && (nodePool.Spec.Platform.Type != hyperv1.AWSPlatform) {
-		SetStatusCondition(&nodePool.Status.Conditions, hyperv1.NodePoolCondition{
-			Type:               hyperv1.NodePoolValidArchPlatform,
-			Status:             corev1.ConditionFalse,
-			Reason:             hyperv1.NodePoolInvalidArchPlatform,
-			Message:            fmt.Sprintf("CPU arch %s is not supported for platform: %s, use 'amd64' instead", nodePool.Spec.Arch, nodePool.Spec.Platform.Type),
-			ObservedGeneration: nodePool.Generation,
-		})
-	}
+	//if (nodePool.Spec.Arch != "amd64") && (nodePool.Spec.Platform.Type != hyperv1.AWSPlatform) {
+	//	SetStatusCondition(&nodePool.Status.Conditions, hyperv1.NodePoolCondition{
+	//		Type:               hyperv1.NodePoolValidArchPlatform,
+	//		Status:             corev1.ConditionFalse,
+	//		Reason:             hyperv1.NodePoolInvalidArchPlatform,
+	//		Message:            fmt.Sprintf("CPU arch %s is not supported for platform: %s, use 'amd64' instead", nodePool.Spec.Arch, nodePool.Spec.Platform.Type),
+	//		ObservedGeneration: nodePool.Generation,
+	//	})
+	//}
 
 	// Validate AWS platform specific input
 	var ami string
