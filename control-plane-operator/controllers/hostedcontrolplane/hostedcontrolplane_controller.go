@@ -2390,28 +2390,63 @@ func (r *HostedControlPlaneReconciler) reconcilePKI(ctx context.Context, hcp *hy
 		return fmt.Errorf("failed to reconcile CSI snapshot webhook cert: %w", err)
 	}
 
+	// For the Multus Admission Controller, Network Node Identity, and OVN Control Plane Metrics Serving Certs:
+	//   We only want to reconcile the secret when the annotation is not on the service; otherwise, it will cause issues
+	//   in cases where you are upgrading an older CPO prior to us adding the feature to reconcile the serving cert
+	//   secret ourselves.
+
 	// Multus Admission Controller Serving Cert
-	multusAdmissionControllerServingCertSecret := manifests.MultusAdmissionControllerServingCert(hcp.Namespace)
-	if _, err := createOrUpdate(ctx, r, multusAdmissionControllerServingCertSecret, func() error {
-		return pki.ReconcileMultusAdmissionControllerServingCertSecret(multusAdmissionControllerServingCertSecret, rootCASecret, p.OwnerRef)
-	}); err != nil {
-		return fmt.Errorf("failed to reconcile multus admission controller serving cert: %w", err)
+	multusAdmissionControllerService := manifests.MultusAdmissionControllerService(hcp.Namespace)
+	if err = r.Get(ctx, client.ObjectKeyFromObject(multusAdmissionControllerService), multusAdmissionControllerService); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to retrieve multus-admission-controller service: %w", err)
+		}
+	}
+
+	_, ok := multusAdmissionControllerService.Annotations["service.beta.openshift.io/serving-cert-secret-name"]
+	if !ok {
+		multusAdmissionControllerServingCertSecret := manifests.MultusAdmissionControllerServingCert(hcp.Namespace)
+		if _, err := createOrUpdate(ctx, r, multusAdmissionControllerServingCertSecret, func() error {
+			return pki.ReconcileMultusAdmissionControllerServingCertSecret(multusAdmissionControllerServingCertSecret, rootCASecret, p.OwnerRef)
+		}); err != nil {
+			return fmt.Errorf("failed to reconcile multus admission controller serving cert: %w", err)
+		}
 	}
 
 	// Network Node Identity Serving Cert
-	networkNodeIdentityServingCertSecret := manifests.NetworkNodeIdentityControllerServingCert(hcp.Namespace)
-	if _, err := createOrUpdate(ctx, r, networkNodeIdentityServingCertSecret, func() error {
-		return pki.ReconcileNetworkNodeIdentityServingCertSecret(networkNodeIdentityServingCertSecret, rootCASecret, p.OwnerRef)
-	}); err != nil {
-		return fmt.Errorf("failed to reconcile network node identity serving cert: %w", err)
+	networkNodeIdentityService := manifests.NetworkNodeIdentityService(hcp.Namespace)
+	if err = r.Get(ctx, client.ObjectKeyFromObject(networkNodeIdentityService), networkNodeIdentityService); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to retrieve network-node-identity service: %w", err)
+		}
+	}
+
+	_, ok = multusAdmissionControllerService.Annotations["service.beta.openshift.io/serving-cert-secret-name"]
+	if !ok {
+		networkNodeIdentityServingCertSecret := manifests.NetworkNodeIdentityControllerServingCert(hcp.Namespace)
+		if _, err := createOrUpdate(ctx, r, networkNodeIdentityServingCertSecret, func() error {
+			return pki.ReconcileNetworkNodeIdentityServingCertSecret(networkNodeIdentityServingCertSecret, rootCASecret, p.OwnerRef)
+		}); err != nil {
+			return fmt.Errorf("failed to reconcile network node identity serving cert: %w", err)
+		}
 	}
 
 	// OVN Control Plane Metrics Serving Cert
-	ovnControlPlaneMetricsServingCertSecret := manifests.OVNControlPlaneMetricsServingCert(hcp.Namespace)
-	if _, err := createOrUpdate(ctx, r, ovnControlPlaneMetricsServingCertSecret, func() error {
-		return pki.ReconcileOVNControlPlaneMetricsServingCertSecret(ovnControlPlaneMetricsServingCertSecret, rootCASecret, p.OwnerRef)
-	}); err != nil {
-		return fmt.Errorf("failed to reconcile OVN control plane serving cert: %w", err)
+	ovnControlPlaneService := manifests.OVNKubernetesControlPlaneService(hcp.Namespace)
+	if err = r.Get(ctx, client.ObjectKeyFromObject(ovnControlPlaneService), ovnControlPlaneService); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to retrieve ovn-kubernetes-control-plane service: %w", err)
+		}
+	}
+
+	_, ok = ovnControlPlaneService.Annotations["service.beta.openshift.io/serving-cert-secret-name"]
+	if !ok {
+		ovnControlPlaneMetricsServingCertSecret := manifests.OVNControlPlaneMetricsServingCert(hcp.Namespace)
+		if _, err := createOrUpdate(ctx, r, ovnControlPlaneMetricsServingCertSecret, func() error {
+			return pki.ReconcileOVNControlPlaneMetricsServingCertSecret(ovnControlPlaneMetricsServingCertSecret, rootCASecret, p.OwnerRef)
+		}); err != nil {
+			return fmt.Errorf("failed to reconcile OVN control plane serving cert: %w", err)
+		}
 	}
 
 	if hcp.Spec.Platform.Type != hyperv1.IBMCloudPlatform {
