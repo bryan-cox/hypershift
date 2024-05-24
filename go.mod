@@ -16,20 +16,20 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.1.0
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/IBM-Cloud/power-go-client v1.6.0
-	github.com/IBM/go-sdk-core/v5 v5.17.2
+	github.com/IBM/go-sdk-core/v5 v5.17.3
 	github.com/IBM/ibm-cos-sdk-go v1.10.3
 	github.com/IBM/networking-go-sdk v0.45.0
-	github.com/IBM/platform-services-go-sdk v0.60.0
+	github.com/IBM/platform-services-go-sdk v0.63.0
 	github.com/IBM/vpc-go-sdk v0.50.0
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
-	github.com/aws/aws-sdk-go v1.52.6
+	github.com/aws/aws-sdk-go v1.53.9
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/clarketm/json v1.17.1
-	github.com/coreos/ignition/v2 v2.17.0
+	github.com/coreos/ignition/v2 v2.18.0
 	github.com/docker/distribution v2.8.3+incompatible
 	github.com/evanphx/json-patch/v5 v5.9.0
 	github.com/go-jose/go-jose/v3 v3.0.3
-	github.com/go-logr/logr v1.4.1
+	github.com/go-logr/logr v1.4.2
 	github.com/go-logr/zapr v1.3.0
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 	github.com/google/go-cmp v0.6.0
@@ -51,7 +51,7 @@ require (
 	github.com/operator-framework/api v0.22.0
 	github.com/pkg/errors v0.9.1
 	github.com/ppc64le-cloud/powervs-utils v0.0.0-20230306072409-bc42a581099f
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.2
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.74.0
 	github.com/prometheus/client_golang v1.19.0
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.52.2
@@ -73,13 +73,13 @@ require (
 	google.golang.org/grpc v1.63.2
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.29.3
-	k8s.io/apiextensions-apiserver v0.29.3
-	k8s.io/apimachinery v0.29.3
-	k8s.io/apiserver v0.29.3
+	k8s.io/api v0.29.5
+	k8s.io/apiextensions-apiserver v0.29.5
+	k8s.io/apimachinery v0.29.5
+	k8s.io/apiserver v0.29.5
 	k8s.io/cli-runtime v0.29.3
-	k8s.io/client-go v0.29.3
-	k8s.io/component-base v0.29.3
+	k8s.io/client-go v0.29.5
+	k8s.io/component-base v0.29.5
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/kube-aggregator v0.29.3
 	k8s.io/kube-scheduler v0.29.3
@@ -240,7 +240,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog v1.0.0 // indirect
-	k8s.io/kms v0.29.3 // indirect
+	k8s.io/kms v0.29.5 // indirect
 	k8s.io/kube-openapi v0.0.0-20240411171206-dc4e619f62f3 // indirect
 	k8s.io/kubelet v0.28.4 // indirect
 	kubevirt.io/controller-lifecycle-operator-sdk/api v0.0.0-20220329064328-f3cc58c6ed90 // indirect
