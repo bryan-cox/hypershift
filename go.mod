@@ -1,7 +1,6 @@
 module github.com/openshift/hypershift
 
 go 1.22.0
-
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.11.1
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.5.2
@@ -16,16 +15,16 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.1.0
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/IBM-Cloud/power-go-client v1.6.0
-	github.com/IBM/go-sdk-core/v5 v5.17.2
+	github.com/IBM/go-sdk-core/v5 v5.17.3
 	github.com/IBM/ibm-cos-sdk-go v1.10.3
-	github.com/IBM/networking-go-sdk v0.45.0
-	github.com/IBM/platform-services-go-sdk v0.60.0
-	github.com/IBM/vpc-go-sdk v0.50.0
+	github.com/IBM/networking-go-sdk v0.46.1
+	github.com/IBM/platform-services-go-sdk v0.62.11
+	github.com/IBM/vpc-go-sdk v0.51.0
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/aws/aws-sdk-go v1.52.6
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/clarketm/json v1.17.1
-	github.com/coreos/ignition/v2 v2.17.0
+	github.com/coreos/ignition/v2 v2.18.0
 	github.com/docker/distribution v2.8.3+incompatible
 	github.com/evanphx/json-patch/v5 v5.9.0
 	github.com/go-jose/go-jose/v3 v3.0.3
@@ -48,7 +47,7 @@ require (
 	github.com/openshift/cluster-node-tuning-operator v0.0.0-20240131125539-0e319439e65a
 	github.com/openshift/hypershift/api v0.0.0-00010101000000-000000000000
 	github.com/openshift/library-go v0.0.0-20240422143640-fad649cbbd63
-	github.com/operator-framework/api v0.22.0
+	github.com/operator-framework/api v0.25.0
 	github.com/pkg/errors v0.9.1
 	github.com/ppc64le-cloud/powervs-utils v0.0.0-20230306072409-bc42a581099f
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.2
@@ -84,15 +83,15 @@ require (
 	k8s.io/kube-aggregator v0.30.1
 	k8s.io/kube-scheduler v0.30.1
 	k8s.io/kubectl v0.30.1
-	k8s.io/pod-security-admission v0.29.3
+	k8s.io/pod-security-admission v0.30.1
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0
-	kubevirt.io/api v1.1.1
-	kubevirt.io/containerized-data-importer-api v1.58.1
-	sigs.k8s.io/apiserver-network-proxy v0.29.0
+	kubevirt.io/api v1.2.1
+	kubevirt.io/containerized-data-importer-api v1.59.0
+	sigs.k8s.io/apiserver-network-proxy v0.30.3
 	sigs.k8s.io/cluster-api v1.7.2
 	sigs.k8s.io/cluster-api-provider-aws/v2 v2.5.0
-	sigs.k8s.io/cluster-api-provider-azure v1.15.0
-	sigs.k8s.io/cluster-api-provider-ibmcloud v0.7.0
+	sigs.k8s.io/cluster-api-provider-azure v1.15.1
+	sigs.k8s.io/cluster-api-provider-ibmcloud v0.8.0
 	sigs.k8s.io/cluster-api-provider-kubevirt v0.1.8
 	sigs.k8s.io/controller-runtime v0.18.3
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1
@@ -136,13 +135,13 @@ require (
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.21.5 // indirect
-	github.com/go-openapi/errors v0.21.0 // indirect
+	github.com/go-openapi/errors v0.22.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/loads v0.21.3 // indirect
 	github.com/go-openapi/runtime v0.26.2 // indirect
 	github.com/go-openapi/spec v0.20.12 // indirect
-	github.com/go-openapi/strfmt v0.22.1 // indirect
+	github.com/go-openapi/strfmt v0.23.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-openapi/validate v0.22.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -193,7 +192,6 @@ require (
 	github.com/openshift/custom-resource-status v1.1.3-0.20220503160415-f2fdb4999d87 // indirect
 	github.com/openshift/machine-config-operator v0.0.1-0.20230807154212-886c5c3fc7a9 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
-	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/profile v1.3.0 // indirect
@@ -244,7 +242,7 @@ require (
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/kms v0.30.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240521193020-835d969ad83a // indirect
-	k8s.io/kubelet v0.28.4 // indirect
+	k8s.io/kubelet v0.29.3 // indirect
 	kubevirt.io/controller-lifecycle-operator-sdk/api v0.0.0-20220329064328-f3cc58c6ed90 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.30.3 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
