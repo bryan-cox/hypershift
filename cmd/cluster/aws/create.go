@@ -359,6 +359,7 @@ func DefaultOptions() *RawCreateOptions {
 		RootVolumeType: "gp3",
 		RootVolumeSize: 120,
 		EndpointAccess: string(hyperv1.Public),
+		MultiArch:      true,
 	}
 }
 
