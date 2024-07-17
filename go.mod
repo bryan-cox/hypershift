@@ -1,6 +1,7 @@
 module github.com/openshift/hypershift
 
 go 1.22.0
+toolchain go1.22.5
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.11.1
@@ -16,12 +17,12 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.1.0
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.3.2
 	github.com/Azure/go-autorest/autorest v0.11.29
-	github.com/IBM-Cloud/power-go-client v1.6.0
-	github.com/IBM/go-sdk-core/v5 v5.17.2
-	github.com/IBM/ibm-cos-sdk-go v1.10.3
-	github.com/IBM/networking-go-sdk v0.45.0
-	github.com/IBM/platform-services-go-sdk v0.60.0
-	github.com/IBM/vpc-go-sdk v0.50.0
+	github.com/IBM-Cloud/power-go-client v1.7.0
+	github.com/IBM/go-sdk-core/v5 v5.17.4
+	github.com/IBM/ibm-cos-sdk-go v1.11.0
+	github.com/IBM/networking-go-sdk v0.49.0
+	github.com/IBM/platform-services-go-sdk v0.65.0
+	github.com/IBM/vpc-go-sdk v0.55.0
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/aws/aws-sdk-go v1.52.6
 	github.com/blang/semver v3.5.1+incompatible
@@ -67,8 +68,8 @@ require (
 	go.etcd.io/etcd/server/v3 v3.5.13
 	go.etcd.io/etcd/tests/v3 v3.5.13
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.23.0
-	golang.org/x/net v0.25.0
+	golang.org/x/crypto v0.24.0
+	golang.org/x/net v0.26.0
 	golang.org/x/sync v0.7.0
 	golang.org/x/time v0.5.0
 	google.golang.org/grpc v1.64.0
@@ -164,7 +165,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.5 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -225,9 +226,9 @@ require (
 	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/oauth2 v0.20.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/term v0.21.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20240401170217-c3f982113cda // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240521202816-d264139d666e // indirect
