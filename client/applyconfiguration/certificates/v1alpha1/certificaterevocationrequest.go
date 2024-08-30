@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// CertificateRevocationRequestApplyConfiguration represents an declarative configuration of the CertificateRevocationRequest type for use
+// CertificateRevocationRequestApplyConfiguration represents a declarative configuration of the CertificateRevocationRequest type for use
 // with apply.
 type CertificateRevocationRequestApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -32,7 +32,7 @@ type CertificateRevocationRequestApplyConfiguration struct {
 	Status                           *CertificateRevocationRequestStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// CertificateRevocationRequest constructs an declarative configuration of the CertificateRevocationRequest type for use with
+// CertificateRevocationRequest constructs a declarative configuration of the CertificateRevocationRequest type for use with
 // apply.
 func CertificateRevocationRequest(name, namespace string) *CertificateRevocationRequestApplyConfiguration {
 	b := &CertificateRevocationRequestApplyConfiguration{}
@@ -215,4 +215,10 @@ func (b *CertificateRevocationRequestApplyConfiguration) WithSpec(value *Certifi
 func (b *CertificateRevocationRequestApplyConfiguration) WithStatus(value *CertificateRevocationRequestStatusApplyConfiguration) *CertificateRevocationRequestApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *CertificateRevocationRequestApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

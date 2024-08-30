@@ -21,7 +21,7 @@ import (
 	v1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// ManagedEtcdStorageSpecApplyConfiguration represents an declarative configuration of the ManagedEtcdStorageSpec type for use
+// ManagedEtcdStorageSpecApplyConfiguration represents a declarative configuration of the ManagedEtcdStorageSpec type for use
 // with apply.
 type ManagedEtcdStorageSpecApplyConfiguration struct {
 	Type               *v1alpha1.ManagedEtcdStorageType                   `json:"type,omitempty"`
@@ -29,7 +29,7 @@ type ManagedEtcdStorageSpecApplyConfiguration struct {
 	RestoreSnapshotURL []string                                           `json:"restoreSnapshotURL,omitempty"`
 }
 
-// ManagedEtcdStorageSpecApplyConfiguration constructs an declarative configuration of the ManagedEtcdStorageSpec type for use with
+// ManagedEtcdStorageSpecApplyConfiguration constructs a declarative configuration of the ManagedEtcdStorageSpec type for use with
 // apply.
 func ManagedEtcdStorageSpec() *ManagedEtcdStorageSpecApplyConfiguration {
 	return &ManagedEtcdStorageSpecApplyConfiguration{}

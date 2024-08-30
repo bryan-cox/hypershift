@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// HostedControlPlaneApplyConfiguration represents an declarative configuration of the HostedControlPlane type for use
+// HostedControlPlaneApplyConfiguration represents a declarative configuration of the HostedControlPlane type for use
 // with apply.
 type HostedControlPlaneApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -32,7 +32,7 @@ type HostedControlPlaneApplyConfiguration struct {
 	Status                           *HostedControlPlaneStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// HostedControlPlane constructs an declarative configuration of the HostedControlPlane type for use with
+// HostedControlPlane constructs a declarative configuration of the HostedControlPlane type for use with
 // apply.
 func HostedControlPlane(name, namespace string) *HostedControlPlaneApplyConfiguration {
 	b := &HostedControlPlaneApplyConfiguration{}
@@ -215,4 +215,10 @@ func (b *HostedControlPlaneApplyConfiguration) WithSpec(value *HostedControlPlan
 func (b *HostedControlPlaneApplyConfiguration) WithStatus(value *HostedControlPlaneStatusApplyConfiguration) *HostedControlPlaneApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *HostedControlPlaneApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

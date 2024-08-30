@@ -42,20 +42,22 @@ var clustersizingconfigurationsKind = v1alpha1.SchemeGroupVersion.WithKind("Clus
 
 // Get takes name of the clusterSizingConfiguration, and returns the corresponding clusterSizingConfiguration object, and an error if there is any.
 func (c *FakeClusterSizingConfigurations) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ClusterSizingConfiguration, err error) {
+	emptyResult := &v1alpha1.ClusterSizingConfiguration{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(clustersizingconfigurationsResource, name), &v1alpha1.ClusterSizingConfiguration{})
+		Invokes(testing.NewRootGetActionWithOptions(clustersizingconfigurationsResource, name, options), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterSizingConfiguration), err
 }
 
 // List takes label and field selectors, and returns the list of ClusterSizingConfigurations that match those selectors.
 func (c *FakeClusterSizingConfigurations) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ClusterSizingConfigurationList, err error) {
+	emptyResult := &v1alpha1.ClusterSizingConfigurationList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(clustersizingconfigurationsResource, clustersizingconfigurationsKind, opts), &v1alpha1.ClusterSizingConfigurationList{})
+		Invokes(testing.NewRootListActionWithOptions(clustersizingconfigurationsResource, clustersizingconfigurationsKind, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -74,36 +76,39 @@ func (c *FakeClusterSizingConfigurations) List(ctx context.Context, opts v1.List
 // Watch returns a watch.Interface that watches the requested clusterSizingConfigurations.
 func (c *FakeClusterSizingConfigurations) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(clustersizingconfigurationsResource, opts))
+		InvokesWatch(testing.NewRootWatchActionWithOptions(clustersizingconfigurationsResource, opts))
 }
 
 // Create takes the representation of a clusterSizingConfiguration and creates it.  Returns the server's representation of the clusterSizingConfiguration, and an error, if there is any.
 func (c *FakeClusterSizingConfigurations) Create(ctx context.Context, clusterSizingConfiguration *v1alpha1.ClusterSizingConfiguration, opts v1.CreateOptions) (result *v1alpha1.ClusterSizingConfiguration, err error) {
+	emptyResult := &v1alpha1.ClusterSizingConfiguration{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(clustersizingconfigurationsResource, clusterSizingConfiguration), &v1alpha1.ClusterSizingConfiguration{})
+		Invokes(testing.NewRootCreateActionWithOptions(clustersizingconfigurationsResource, clusterSizingConfiguration, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterSizingConfiguration), err
 }
 
 // Update takes the representation of a clusterSizingConfiguration and updates it. Returns the server's representation of the clusterSizingConfiguration, and an error, if there is any.
 func (c *FakeClusterSizingConfigurations) Update(ctx context.Context, clusterSizingConfiguration *v1alpha1.ClusterSizingConfiguration, opts v1.UpdateOptions) (result *v1alpha1.ClusterSizingConfiguration, err error) {
+	emptyResult := &v1alpha1.ClusterSizingConfiguration{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(clustersizingconfigurationsResource, clusterSizingConfiguration), &v1alpha1.ClusterSizingConfiguration{})
+		Invokes(testing.NewRootUpdateActionWithOptions(clustersizingconfigurationsResource, clusterSizingConfiguration, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterSizingConfiguration), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeClusterSizingConfigurations) UpdateStatus(ctx context.Context, clusterSizingConfiguration *v1alpha1.ClusterSizingConfiguration, opts v1.UpdateOptions) (*v1alpha1.ClusterSizingConfiguration, error) {
+func (c *FakeClusterSizingConfigurations) UpdateStatus(ctx context.Context, clusterSizingConfiguration *v1alpha1.ClusterSizingConfiguration, opts v1.UpdateOptions) (result *v1alpha1.ClusterSizingConfiguration, err error) {
+	emptyResult := &v1alpha1.ClusterSizingConfiguration{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceAction(clustersizingconfigurationsResource, "status", clusterSizingConfiguration), &v1alpha1.ClusterSizingConfiguration{})
+		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(clustersizingconfigurationsResource, "status", clusterSizingConfiguration, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterSizingConfiguration), err
 }
@@ -117,7 +122,7 @@ func (c *FakeClusterSizingConfigurations) Delete(ctx context.Context, name strin
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeClusterSizingConfigurations) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(clustersizingconfigurationsResource, listOpts)
+	action := testing.NewRootDeleteCollectionActionWithOptions(clustersizingconfigurationsResource, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ClusterSizingConfigurationList{})
 	return err
@@ -125,10 +130,11 @@ func (c *FakeClusterSizingConfigurations) DeleteCollection(ctx context.Context, 
 
 // Patch applies the patch and returns the patched clusterSizingConfiguration.
 func (c *FakeClusterSizingConfigurations) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterSizingConfiguration, err error) {
+	emptyResult := &v1alpha1.ClusterSizingConfiguration{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(clustersizingconfigurationsResource, name, pt, data, subresources...), &v1alpha1.ClusterSizingConfiguration{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(clustersizingconfigurationsResource, name, pt, data, opts, subresources...), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterSizingConfiguration), err
 }
@@ -146,10 +152,11 @@ func (c *FakeClusterSizingConfigurations) Apply(ctx context.Context, clusterSizi
 	if name == nil {
 		return nil, fmt.Errorf("clusterSizingConfiguration.Name must be provided to Apply")
 	}
+	emptyResult := &v1alpha1.ClusterSizingConfiguration{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(clustersizingconfigurationsResource, *name, types.ApplyPatchType, data), &v1alpha1.ClusterSizingConfiguration{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(clustersizingconfigurationsResource, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterSizingConfiguration), err
 }
@@ -168,10 +175,11 @@ func (c *FakeClusterSizingConfigurations) ApplyStatus(ctx context.Context, clust
 	if name == nil {
 		return nil, fmt.Errorf("clusterSizingConfiguration.Name must be provided to Apply")
 	}
+	emptyResult := &v1alpha1.ClusterSizingConfiguration{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(clustersizingconfigurationsResource, *name, types.ApplyPatchType, data, "status"), &v1alpha1.ClusterSizingConfiguration{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(clustersizingconfigurationsResource, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ClusterSizingConfiguration), err
 }

@@ -21,7 +21,7 @@ import (
 	v1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// APIServerNetworkingApplyConfiguration represents an declarative configuration of the APIServerNetworking type for use
+// APIServerNetworkingApplyConfiguration represents a declarative configuration of the APIServerNetworking type for use
 // with apply.
 type APIServerNetworkingApplyConfiguration struct {
 	AdvertiseAddress  *string              `json:"advertiseAddress,omitempty"`
@@ -29,7 +29,7 @@ type APIServerNetworkingApplyConfiguration struct {
 	AllowedCIDRBlocks []v1alpha1.CIDRBlock `json:"allowedCIDRBlocks,omitempty"`
 }
 
-// APIServerNetworkingApplyConfiguration constructs an declarative configuration of the APIServerNetworking type for use with
+// APIServerNetworkingApplyConfiguration constructs a declarative configuration of the APIServerNetworking type for use with
 // apply.
 func APIServerNetworking() *APIServerNetworkingApplyConfiguration {
 	return &APIServerNetworkingApplyConfiguration{}

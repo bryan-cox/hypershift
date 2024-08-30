@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// HostedClusterSpecApplyConfiguration represents an declarative configuration of the HostedClusterSpec type for use
+// HostedClusterSpecApplyConfiguration represents a declarative configuration of the HostedClusterSpec type for use
 // with apply.
 type HostedClusterSpecApplyConfiguration struct {
 	Release                          *ReleaseApplyConfiguration                           `json:"release,omitempty"`
@@ -56,7 +56,7 @@ type HostedClusterSpecApplyConfiguration struct {
 	Tolerations                      []corev1.Toleration                                  `json:"tolerations,omitempty"`
 }
 
-// HostedClusterSpecApplyConfiguration constructs an declarative configuration of the HostedClusterSpec type for use with
+// HostedClusterSpecApplyConfiguration constructs a declarative configuration of the HostedClusterSpec type for use with
 // apply.
 func HostedClusterSpec() *HostedClusterSpecApplyConfiguration {
 	return &HostedClusterSpecApplyConfiguration{}

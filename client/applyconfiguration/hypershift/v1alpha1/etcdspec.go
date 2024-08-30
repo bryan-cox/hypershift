@@ -21,7 +21,7 @@ import (
 	v1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// EtcdSpecApplyConfiguration represents an declarative configuration of the EtcdSpec type for use
+// EtcdSpecApplyConfiguration represents a declarative configuration of the EtcdSpec type for use
 // with apply.
 type EtcdSpecApplyConfiguration struct {
 	ManagementType *v1alpha1.EtcdManagementType         `json:"managementType,omitempty"`
@@ -29,7 +29,7 @@ type EtcdSpecApplyConfiguration struct {
 	Unmanaged      *UnmanagedEtcdSpecApplyConfiguration `json:"unmanaged,omitempty"`
 }
 
-// EtcdSpecApplyConfiguration constructs an declarative configuration of the EtcdSpec type for use with
+// EtcdSpecApplyConfiguration constructs a declarative configuration of the EtcdSpec type for use with
 // apply.
 func EtcdSpec() *EtcdSpecApplyConfiguration {
 	return &EtcdSpecApplyConfiguration{}

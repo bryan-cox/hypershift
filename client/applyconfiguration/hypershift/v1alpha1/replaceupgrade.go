@@ -21,14 +21,14 @@ import (
 	v1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// ReplaceUpgradeApplyConfiguration represents an declarative configuration of the ReplaceUpgrade type for use
+// ReplaceUpgradeApplyConfiguration represents a declarative configuration of the ReplaceUpgrade type for use
 // with apply.
 type ReplaceUpgradeApplyConfiguration struct {
 	Strategy      *v1alpha1.UpgradeStrategy        `json:"strategy,omitempty"`
 	RollingUpdate *RollingUpdateApplyConfiguration `json:"rollingUpdate,omitempty"`
 }
 
-// ReplaceUpgradeApplyConfiguration constructs an declarative configuration of the ReplaceUpgrade type for use with
+// ReplaceUpgradeApplyConfiguration constructs a declarative configuration of the ReplaceUpgrade type for use with
 // apply.
 func ReplaceUpgrade() *ReplaceUpgradeApplyConfiguration {
 	return &ReplaceUpgradeApplyConfiguration{}

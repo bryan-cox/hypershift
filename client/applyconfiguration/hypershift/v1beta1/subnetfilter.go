@@ -21,7 +21,7 @@ import (
 	hypershiftv1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 )
 
-// SubnetFilterApplyConfiguration represents an declarative configuration of the SubnetFilter type for use
+// SubnetFilterApplyConfiguration represents a declarative configuration of the SubnetFilter type for use
 // with apply.
 type SubnetFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
@@ -35,7 +35,7 @@ type SubnetFilterApplyConfiguration struct {
 	FilterByNeutronTagsApplyConfiguration `json:",inline"`
 }
 
-// SubnetFilterApplyConfiguration constructs an declarative configuration of the SubnetFilter type for use with
+// SubnetFilterApplyConfiguration constructs a declarative configuration of the SubnetFilter type for use with
 // apply.
 func SubnetFilter() *SubnetFilterApplyConfiguration {
 	return &SubnetFilterApplyConfiguration{}

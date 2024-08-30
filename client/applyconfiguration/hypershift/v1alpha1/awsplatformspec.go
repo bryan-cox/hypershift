@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// AWSPlatformSpecApplyConfiguration represents an declarative configuration of the AWSPlatformSpec type for use
+// AWSPlatformSpecApplyConfiguration represents a declarative configuration of the AWSPlatformSpec type for use
 // with apply.
 type AWSPlatformSpecApplyConfiguration struct {
 	Region                      *string                                   `json:"region,omitempty"`
@@ -39,7 +39,7 @@ type AWSPlatformSpecApplyConfiguration struct {
 	MultiArch                   *bool                                     `json:"multiArch,omitempty"`
 }
 
-// AWSPlatformSpecApplyConfiguration constructs an declarative configuration of the AWSPlatformSpec type for use with
+// AWSPlatformSpecApplyConfiguration constructs a declarative configuration of the AWSPlatformSpec type for use with
 // apply.
 func AWSPlatformSpec() *AWSPlatformSpecApplyConfiguration {
 	return &AWSPlatformSpecApplyConfiguration{}

@@ -21,7 +21,7 @@ import (
 	v1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 )
 
-// NodePoolPlatformApplyConfiguration represents an declarative configuration of the NodePoolPlatform type for use
+// NodePoolPlatformApplyConfiguration represents a declarative configuration of the NodePoolPlatform type for use
 // with apply.
 type NodePoolPlatformApplyConfiguration struct {
 	Type      *v1beta1.PlatformType                        `json:"type,omitempty"`
@@ -34,7 +34,7 @@ type NodePoolPlatformApplyConfiguration struct {
 	OpenStack *OpenStackNodePoolPlatformApplyConfiguration `json:"openstack,omitempty"`
 }
 
-// NodePoolPlatformApplyConfiguration constructs an declarative configuration of the NodePoolPlatform type for use with
+// NodePoolPlatformApplyConfiguration constructs a declarative configuration of the NodePoolPlatform type for use with
 // apply.
 func NodePoolPlatform() *NodePoolPlatformApplyConfiguration {
 	return &NodePoolPlatformApplyConfiguration{}

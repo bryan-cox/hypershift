@@ -21,7 +21,7 @@ import (
 	v1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// IBMCloudKMSAuthSpecApplyConfiguration represents an declarative configuration of the IBMCloudKMSAuthSpec type for use
+// IBMCloudKMSAuthSpecApplyConfiguration represents a declarative configuration of the IBMCloudKMSAuthSpec type for use
 // with apply.
 type IBMCloudKMSAuthSpecApplyConfiguration struct {
 	Type      *v1alpha1.IBMCloudKMSAuthType                   `json:"type,omitempty"`
@@ -29,7 +29,7 @@ type IBMCloudKMSAuthSpecApplyConfiguration struct {
 	Managed   *v1alpha1.IBMCloudKMSManagedAuthSpec            `json:"managed,omitempty"`
 }
 
-// IBMCloudKMSAuthSpecApplyConfiguration constructs an declarative configuration of the IBMCloudKMSAuthSpec type for use with
+// IBMCloudKMSAuthSpecApplyConfiguration constructs a declarative configuration of the IBMCloudKMSAuthSpec type for use with
 // apply.
 func IBMCloudKMSAuthSpec() *IBMCloudKMSAuthSpecApplyConfiguration {
 	return &IBMCloudKMSAuthSpecApplyConfiguration{}

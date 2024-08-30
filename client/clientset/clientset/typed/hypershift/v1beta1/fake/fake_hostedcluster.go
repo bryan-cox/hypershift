@@ -43,22 +43,24 @@ var hostedclustersKind = v1beta1.SchemeGroupVersion.WithKind("HostedCluster")
 
 // Get takes name of the hostedCluster, and returns the corresponding hostedCluster object, and an error if there is any.
 func (c *FakeHostedClusters) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.HostedCluster, err error) {
+	emptyResult := &v1beta1.HostedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(hostedclustersResource, c.ns, name), &v1beta1.HostedCluster{})
+		Invokes(testing.NewGetActionWithOptions(hostedclustersResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedCluster), err
 }
 
 // List takes label and field selectors, and returns the list of HostedClusters that match those selectors.
 func (c *FakeHostedClusters) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.HostedClusterList, err error) {
+	emptyResult := &v1beta1.HostedClusterList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(hostedclustersResource, hostedclustersKind, c.ns, opts), &v1beta1.HostedClusterList{})
+		Invokes(testing.NewListActionWithOptions(hostedclustersResource, hostedclustersKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -77,40 +79,43 @@ func (c *FakeHostedClusters) List(ctx context.Context, opts v1.ListOptions) (res
 // Watch returns a watch.Interface that watches the requested hostedClusters.
 func (c *FakeHostedClusters) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(hostedclustersResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(hostedclustersResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a hostedCluster and creates it.  Returns the server's representation of the hostedCluster, and an error, if there is any.
 func (c *FakeHostedClusters) Create(ctx context.Context, hostedCluster *v1beta1.HostedCluster, opts v1.CreateOptions) (result *v1beta1.HostedCluster, err error) {
+	emptyResult := &v1beta1.HostedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(hostedclustersResource, c.ns, hostedCluster), &v1beta1.HostedCluster{})
+		Invokes(testing.NewCreateActionWithOptions(hostedclustersResource, c.ns, hostedCluster, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedCluster), err
 }
 
 // Update takes the representation of a hostedCluster and updates it. Returns the server's representation of the hostedCluster, and an error, if there is any.
 func (c *FakeHostedClusters) Update(ctx context.Context, hostedCluster *v1beta1.HostedCluster, opts v1.UpdateOptions) (result *v1beta1.HostedCluster, err error) {
+	emptyResult := &v1beta1.HostedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(hostedclustersResource, c.ns, hostedCluster), &v1beta1.HostedCluster{})
+		Invokes(testing.NewUpdateActionWithOptions(hostedclustersResource, c.ns, hostedCluster, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedCluster), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeHostedClusters) UpdateStatus(ctx context.Context, hostedCluster *v1beta1.HostedCluster, opts v1.UpdateOptions) (*v1beta1.HostedCluster, error) {
+func (c *FakeHostedClusters) UpdateStatus(ctx context.Context, hostedCluster *v1beta1.HostedCluster, opts v1.UpdateOptions) (result *v1beta1.HostedCluster, err error) {
+	emptyResult := &v1beta1.HostedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(hostedclustersResource, "status", c.ns, hostedCluster), &v1beta1.HostedCluster{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(hostedclustersResource, "status", c.ns, hostedCluster, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedCluster), err
 }
@@ -125,7 +130,7 @@ func (c *FakeHostedClusters) Delete(ctx context.Context, name string, opts v1.De
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeHostedClusters) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(hostedclustersResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(hostedclustersResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1beta1.HostedClusterList{})
 	return err
@@ -133,11 +138,12 @@ func (c *FakeHostedClusters) DeleteCollection(ctx context.Context, opts v1.Delet
 
 // Patch applies the patch and returns the patched hostedCluster.
 func (c *FakeHostedClusters) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.HostedCluster, err error) {
+	emptyResult := &v1beta1.HostedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(hostedclustersResource, c.ns, name, pt, data, subresources...), &v1beta1.HostedCluster{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(hostedclustersResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedCluster), err
 }
@@ -155,11 +161,12 @@ func (c *FakeHostedClusters) Apply(ctx context.Context, hostedCluster *hypershif
 	if name == nil {
 		return nil, fmt.Errorf("hostedCluster.Name must be provided to Apply")
 	}
+	emptyResult := &v1beta1.HostedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(hostedclustersResource, c.ns, *name, types.ApplyPatchType, data), &v1beta1.HostedCluster{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(hostedclustersResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedCluster), err
 }
@@ -178,11 +185,12 @@ func (c *FakeHostedClusters) ApplyStatus(ctx context.Context, hostedCluster *hyp
 	if name == nil {
 		return nil, fmt.Errorf("hostedCluster.Name must be provided to Apply")
 	}
+	emptyResult := &v1beta1.HostedCluster{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(hostedclustersResource, c.ns, *name, types.ApplyPatchType, data, "status"), &v1beta1.HostedCluster{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(hostedclustersResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedCluster), err
 }

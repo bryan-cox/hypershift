@@ -21,7 +21,7 @@ import (
 	v1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 )
 
-// KMSSpecApplyConfiguration represents an declarative configuration of the KMSSpec type for use
+// KMSSpecApplyConfiguration represents a declarative configuration of the KMSSpec type for use
 // with apply.
 type KMSSpecApplyConfiguration struct {
 	Provider *v1beta1.KMSProvider               `json:"provider,omitempty"`
@@ -30,7 +30,7 @@ type KMSSpecApplyConfiguration struct {
 	Azure    *AzureKMSSpecApplyConfiguration    `json:"azure,omitempty"`
 }
 
-// KMSSpecApplyConfiguration constructs an declarative configuration of the KMSSpec type for use with
+// KMSSpecApplyConfiguration constructs a declarative configuration of the KMSSpec type for use with
 // apply.
 func KMSSpec() *KMSSpecApplyConfiguration {
 	return &KMSSpecApplyConfiguration{}

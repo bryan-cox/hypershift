@@ -24,7 +24,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// CertificateSigningRequestApprovalApplyConfiguration represents an declarative configuration of the CertificateSigningRequestApproval type for use
+// CertificateSigningRequestApprovalApplyConfiguration represents a declarative configuration of the CertificateSigningRequestApproval type for use
 // with apply.
 type CertificateSigningRequestApprovalApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -33,7 +33,7 @@ type CertificateSigningRequestApprovalApplyConfiguration struct {
 	Status                           *v1beta1.CertificateSigningRequestApprovalStatus `json:"status,omitempty"`
 }
 
-// CertificateSigningRequestApproval constructs an declarative configuration of the CertificateSigningRequestApproval type for use with
+// CertificateSigningRequestApproval constructs a declarative configuration of the CertificateSigningRequestApproval type for use with
 // apply.
 func CertificateSigningRequestApproval(name, namespace string) *CertificateSigningRequestApprovalApplyConfiguration {
 	b := &CertificateSigningRequestApprovalApplyConfiguration{}
@@ -216,4 +216,10 @@ func (b *CertificateSigningRequestApprovalApplyConfiguration) WithSpec(value v1b
 func (b *CertificateSigningRequestApprovalApplyConfiguration) WithStatus(value v1beta1.CertificateSigningRequestApprovalStatus) *CertificateSigningRequestApprovalApplyConfiguration {
 	b.Status = &value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *CertificateSigningRequestApprovalApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

@@ -21,7 +21,7 @@ import (
 	v1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 )
 
-// AzureVMImageApplyConfiguration represents an declarative configuration of the AzureVMImage type for use
+// AzureVMImageApplyConfiguration represents a declarative configuration of the AzureVMImage type for use
 // with apply.
 type AzureVMImageApplyConfiguration struct {
 	Type             *v1beta1.AzureVMImageType           `json:"azureImageType,omitempty"`
@@ -29,7 +29,7 @@ type AzureVMImageApplyConfiguration struct {
 	AzureMarketplace *MarketplaceImageApplyConfiguration `json:"azureMarketplace,omitempty"`
 }
 
-// AzureVMImageApplyConfiguration constructs an declarative configuration of the AzureVMImage type for use with
+// AzureVMImageApplyConfiguration constructs a declarative configuration of the AzureVMImage type for use with
 // apply.
 func AzureVMImage() *AzureVMImageApplyConfiguration {
 	return &AzureVMImageApplyConfiguration{}

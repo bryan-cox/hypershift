@@ -21,13 +21,13 @@ import (
 	v1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 )
 
-// KubevirtCachingStrategyApplyConfiguration represents an declarative configuration of the KubevirtCachingStrategy type for use
+// KubevirtCachingStrategyApplyConfiguration represents a declarative configuration of the KubevirtCachingStrategy type for use
 // with apply.
 type KubevirtCachingStrategyApplyConfiguration struct {
 	Type *v1beta1.KubevirtCachingStrategyType `json:"type,omitempty"`
 }
 
-// KubevirtCachingStrategyApplyConfiguration constructs an declarative configuration of the KubevirtCachingStrategy type for use with
+// KubevirtCachingStrategyApplyConfiguration constructs a declarative configuration of the KubevirtCachingStrategy type for use with
 // apply.
 func KubevirtCachingStrategy() *KubevirtCachingStrategyApplyConfiguration {
 	return &KubevirtCachingStrategyApplyConfiguration{}

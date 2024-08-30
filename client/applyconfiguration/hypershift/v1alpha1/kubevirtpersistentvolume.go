@@ -23,7 +23,7 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
-// KubevirtPersistentVolumeApplyConfiguration represents an declarative configuration of the KubevirtPersistentVolume type for use
+// KubevirtPersistentVolumeApplyConfiguration represents a declarative configuration of the KubevirtPersistentVolume type for use
 // with apply.
 type KubevirtPersistentVolumeApplyConfiguration struct {
 	Size         *resource.Quantity                    `json:"size,omitempty"`
@@ -32,7 +32,7 @@ type KubevirtPersistentVolumeApplyConfiguration struct {
 	VolumeMode   *v1.PersistentVolumeMode              `json:"volumeMode,omitempty"`
 }
 
-// KubevirtPersistentVolumeApplyConfiguration constructs an declarative configuration of the KubevirtPersistentVolume type for use with
+// KubevirtPersistentVolumeApplyConfiguration constructs a declarative configuration of the KubevirtPersistentVolume type for use with
 // apply.
 func KubevirtPersistentVolume() *KubevirtPersistentVolumeApplyConfiguration {
 	return &KubevirtPersistentVolumeApplyConfiguration{}

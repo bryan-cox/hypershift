@@ -21,14 +21,14 @@ import (
 	v1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 )
 
-// DiagnosticsApplyConfiguration represents an declarative configuration of the Diagnostics type for use
+// DiagnosticsApplyConfiguration represents a declarative configuration of the Diagnostics type for use
 // with apply.
 type DiagnosticsApplyConfiguration struct {
 	StorageAccountType *v1beta1.AzureDiagnosticsStorageAccountType `json:"storageAccountType,omitempty"`
 	StorageAccountURI  *string                                     `json:"storageAccountURI,omitempty"`
 }
 
-// DiagnosticsApplyConfiguration constructs an declarative configuration of the Diagnostics type for use with
+// DiagnosticsApplyConfiguration constructs a declarative configuration of the Diagnostics type for use with
 // apply.
 func Diagnostics() *DiagnosticsApplyConfiguration {
 	return &DiagnosticsApplyConfiguration{}

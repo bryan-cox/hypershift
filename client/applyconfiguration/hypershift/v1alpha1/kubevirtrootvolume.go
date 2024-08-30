@@ -21,7 +21,7 @@ import (
 	hypershiftv1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// KubevirtRootVolumeApplyConfiguration represents an declarative configuration of the KubevirtRootVolume type for use
+// KubevirtRootVolumeApplyConfiguration represents a declarative configuration of the KubevirtRootVolume type for use
 // with apply.
 type KubevirtRootVolumeApplyConfiguration struct {
 	Image                            *KubevirtDiskImageApplyConfiguration `json:"diskImage,omitempty"`
@@ -29,7 +29,7 @@ type KubevirtRootVolumeApplyConfiguration struct {
 	CacheStrategy                    *KubevirtCachingStrategyApplyConfiguration `json:"cacheStrategy,omitempty"`
 }
 
-// KubevirtRootVolumeApplyConfiguration constructs an declarative configuration of the KubevirtRootVolume type for use with
+// KubevirtRootVolumeApplyConfiguration constructs a declarative configuration of the KubevirtRootVolume type for use with
 // apply.
 func KubevirtRootVolume() *KubevirtRootVolumeApplyConfiguration {
 	return &KubevirtRootVolumeApplyConfiguration{}

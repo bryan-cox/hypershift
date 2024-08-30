@@ -21,14 +21,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// AWSKMSAuthSpecApplyConfiguration represents an declarative configuration of the AWSKMSAuthSpec type for use
+// AWSKMSAuthSpecApplyConfiguration represents a declarative configuration of the AWSKMSAuthSpec type for use
 // with apply.
 type AWSKMSAuthSpecApplyConfiguration struct {
 	Credentials   *v1.LocalObjectReference `json:"credentials,omitempty"`
 	AWSKMSRoleARN *string                  `json:"awsKms,omitempty"`
 }
 
-// AWSKMSAuthSpecApplyConfiguration constructs an declarative configuration of the AWSKMSAuthSpec type for use with
+// AWSKMSAuthSpecApplyConfiguration constructs a declarative configuration of the AWSKMSAuthSpec type for use with
 // apply.
 func AWSKMSAuthSpec() *AWSKMSAuthSpecApplyConfiguration {
 	return &AWSKMSAuthSpecApplyConfiguration{}

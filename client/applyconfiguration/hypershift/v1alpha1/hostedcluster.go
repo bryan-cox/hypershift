@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// HostedClusterApplyConfiguration represents an declarative configuration of the HostedCluster type for use
+// HostedClusterApplyConfiguration represents a declarative configuration of the HostedCluster type for use
 // with apply.
 type HostedClusterApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -32,7 +32,7 @@ type HostedClusterApplyConfiguration struct {
 	Status                           *HostedClusterStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// HostedCluster constructs an declarative configuration of the HostedCluster type for use with
+// HostedCluster constructs a declarative configuration of the HostedCluster type for use with
 // apply.
 func HostedCluster(name, namespace string) *HostedClusterApplyConfiguration {
 	b := &HostedClusterApplyConfiguration{}
@@ -215,4 +215,10 @@ func (b *HostedClusterApplyConfiguration) WithSpec(value *HostedClusterSpecApply
 func (b *HostedClusterApplyConfiguration) WithStatus(value *HostedClusterStatusApplyConfiguration) *HostedClusterApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *HostedClusterApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

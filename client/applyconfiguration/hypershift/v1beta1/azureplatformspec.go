@@ -21,7 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// AzurePlatformSpecApplyConfiguration represents an declarative configuration of the AzurePlatformSpec type for use
+// AzurePlatformSpecApplyConfiguration represents a declarative configuration of the AzurePlatformSpec type for use
 // with apply.
 type AzurePlatformSpecApplyConfiguration struct {
 	Credentials       *v1.LocalObjectReference `json:"credentials,omitempty"`
@@ -34,7 +34,7 @@ type AzurePlatformSpecApplyConfiguration struct {
 	SecurityGroupID   *string                  `json:"securityGroupID,omitempty"`
 }
 
-// AzurePlatformSpecApplyConfiguration constructs an declarative configuration of the AzurePlatformSpec type for use with
+// AzurePlatformSpecApplyConfiguration constructs a declarative configuration of the AzurePlatformSpec type for use with
 // apply.
 func AzurePlatformSpec() *AzurePlatformSpecApplyConfiguration {
 	return &AzurePlatformSpecApplyConfiguration{}

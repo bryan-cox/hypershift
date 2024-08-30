@@ -21,7 +21,7 @@ import (
 	v1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 )
 
-// NodePoolManagementApplyConfiguration represents an declarative configuration of the NodePoolManagement type for use
+// NodePoolManagementApplyConfiguration represents a declarative configuration of the NodePoolManagement type for use
 // with apply.
 type NodePoolManagementApplyConfiguration struct {
 	UpgradeType *v1beta1.UpgradeType              `json:"upgradeType,omitempty"`
@@ -30,7 +30,7 @@ type NodePoolManagementApplyConfiguration struct {
 	AutoRepair  *bool                             `json:"autoRepair,omitempty"`
 }
 
-// NodePoolManagementApplyConfiguration constructs an declarative configuration of the NodePoolManagement type for use with
+// NodePoolManagementApplyConfiguration constructs a declarative configuration of the NodePoolManagement type for use with
 // apply.
 func NodePoolManagement() *NodePoolManagementApplyConfiguration {
 	return &NodePoolManagementApplyConfiguration{}

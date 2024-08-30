@@ -22,7 +22,7 @@ import (
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// PowerVSNodePoolPlatformApplyConfiguration represents an declarative configuration of the PowerVSNodePoolPlatform type for use
+// PowerVSNodePoolPlatformApplyConfiguration represents a declarative configuration of the PowerVSNodePoolPlatform type for use
 // with apply.
 type PowerVSNodePoolPlatformApplyConfiguration struct {
 	SystemType        *string                                     `json:"systemType,omitempty"`
@@ -34,7 +34,7 @@ type PowerVSNodePoolPlatformApplyConfiguration struct {
 	ImageDeletePolicy *v1beta1.PowerVSNodePoolImageDeletePolicy   `json:"imageDeletePolicy,omitempty"`
 }
 
-// PowerVSNodePoolPlatformApplyConfiguration constructs an declarative configuration of the PowerVSNodePoolPlatform type for use with
+// PowerVSNodePoolPlatformApplyConfiguration constructs a declarative configuration of the PowerVSNodePoolPlatform type for use with
 // apply.
 func PowerVSNodePoolPlatform() *PowerVSNodePoolPlatformApplyConfiguration {
 	return &PowerVSNodePoolPlatformApplyConfiguration{}

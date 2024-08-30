@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// NodePoolApplyConfiguration represents an declarative configuration of the NodePool type for use
+// NodePoolApplyConfiguration represents a declarative configuration of the NodePool type for use
 // with apply.
 type NodePoolApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -32,7 +32,7 @@ type NodePoolApplyConfiguration struct {
 	Status                           *NodePoolStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// NodePool constructs an declarative configuration of the NodePool type for use with
+// NodePool constructs a declarative configuration of the NodePool type for use with
 // apply.
 func NodePool(name, namespace string) *NodePoolApplyConfiguration {
 	b := &NodePoolApplyConfiguration{}
@@ -215,4 +215,10 @@ func (b *NodePoolApplyConfiguration) WithSpec(value *NodePoolSpecApplyConfigurat
 func (b *NodePoolApplyConfiguration) WithStatus(value *NodePoolStatusApplyConfiguration) *NodePoolApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *NodePoolApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

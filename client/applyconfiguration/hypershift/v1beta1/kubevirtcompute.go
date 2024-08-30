@@ -22,7 +22,7 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
-// KubevirtComputeApplyConfiguration represents an declarative configuration of the KubevirtCompute type for use
+// KubevirtComputeApplyConfiguration represents a declarative configuration of the KubevirtCompute type for use
 // with apply.
 type KubevirtComputeApplyConfiguration struct {
 	Memory   *resource.Quantity `json:"memory,omitempty"`
@@ -30,7 +30,7 @@ type KubevirtComputeApplyConfiguration struct {
 	QosClass *v1beta1.QoSClass  `json:"qosClass,omitempty"`
 }
 
-// KubevirtComputeApplyConfiguration constructs an declarative configuration of the KubevirtCompute type for use with
+// KubevirtComputeApplyConfiguration constructs a declarative configuration of the KubevirtCompute type for use with
 // apply.
 func KubevirtCompute() *KubevirtComputeApplyConfiguration {
 	return &KubevirtComputeApplyConfiguration{}

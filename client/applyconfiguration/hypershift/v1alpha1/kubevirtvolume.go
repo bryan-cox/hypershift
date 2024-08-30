@@ -21,14 +21,14 @@ import (
 	v1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// KubevirtVolumeApplyConfiguration represents an declarative configuration of the KubevirtVolume type for use
+// KubevirtVolumeApplyConfiguration represents a declarative configuration of the KubevirtVolume type for use
 // with apply.
 type KubevirtVolumeApplyConfiguration struct {
 	Type       *v1alpha1.KubevirtVolumeType                `json:"type,omitempty"`
 	Persistent *KubevirtPersistentVolumeApplyConfiguration `json:"persistent,omitempty"`
 }
 
-// KubevirtVolumeApplyConfiguration constructs an declarative configuration of the KubevirtVolume type for use with
+// KubevirtVolumeApplyConfiguration constructs a declarative configuration of the KubevirtVolume type for use with
 // apply.
 func KubevirtVolume() *KubevirtVolumeApplyConfiguration {
 	return &KubevirtVolumeApplyConfiguration{}

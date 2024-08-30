@@ -21,7 +21,7 @@ import (
 	hypershiftv1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 )
 
-// RouterFilterApplyConfiguration represents an declarative configuration of the RouterFilter type for use
+// RouterFilterApplyConfiguration represents a declarative configuration of the RouterFilter type for use
 // with apply.
 type RouterFilterApplyConfiguration struct {
 	Name                                  *string `json:"name,omitempty"`
@@ -30,7 +30,7 @@ type RouterFilterApplyConfiguration struct {
 	FilterByNeutronTagsApplyConfiguration `json:",inline"`
 }
 
-// RouterFilterApplyConfiguration constructs an declarative configuration of the RouterFilter type for use with
+// RouterFilterApplyConfiguration constructs a declarative configuration of the RouterFilter type for use with
 // apply.
 func RouterFilter() *RouterFilterApplyConfiguration {
 	return &RouterFilterApplyConfiguration{}

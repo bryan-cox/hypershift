@@ -19,8 +19,8 @@ package v1beta1
 
 import (
 	v1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -37,25 +37,17 @@ type HostedClusterLister interface {
 
 // hostedClusterLister implements the HostedClusterLister interface.
 type hostedClusterLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1beta1.HostedCluster]
 }
 
 // NewHostedClusterLister returns a new HostedClusterLister.
 func NewHostedClusterLister(indexer cache.Indexer) HostedClusterLister {
-	return &hostedClusterLister{indexer: indexer}
-}
-
-// List lists all HostedClusters in the indexer.
-func (s *hostedClusterLister) List(selector labels.Selector) (ret []*v1beta1.HostedCluster, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.HostedCluster))
-	})
-	return ret, err
+	return &hostedClusterLister{listers.New[*v1beta1.HostedCluster](indexer, v1beta1.Resource("hostedcluster"))}
 }
 
 // HostedClusters returns an object that can list and get HostedClusters.
 func (s *hostedClusterLister) HostedClusters(namespace string) HostedClusterNamespaceLister {
-	return hostedClusterNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return hostedClusterNamespaceLister{listers.NewNamespaced[*v1beta1.HostedCluster](s.ResourceIndexer, namespace)}
 }
 
 // HostedClusterNamespaceLister helps list and get HostedClusters.
@@ -73,26 +65,5 @@ type HostedClusterNamespaceLister interface {
 // hostedClusterNamespaceLister implements the HostedClusterNamespaceLister
 // interface.
 type hostedClusterNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all HostedClusters in the indexer for a given namespace.
-func (s hostedClusterNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.HostedCluster, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta1.HostedCluster))
-	})
-	return ret, err
-}
-
-// Get retrieves the HostedCluster from the indexer for a given namespace and name.
-func (s hostedClusterNamespaceLister) Get(name string) (*v1beta1.HostedCluster, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1beta1.Resource("hostedcluster"), name)
-	}
-	return obj.(*v1beta1.HostedCluster), nil
+	listers.ResourceIndexer[*v1beta1.HostedCluster]
 }

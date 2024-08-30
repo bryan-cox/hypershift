@@ -21,7 +21,7 @@ import (
 	v1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// SecretEncryptionSpecApplyConfiguration represents an declarative configuration of the SecretEncryptionSpec type for use
+// SecretEncryptionSpecApplyConfiguration represents a declarative configuration of the SecretEncryptionSpec type for use
 // with apply.
 type SecretEncryptionSpecApplyConfiguration struct {
 	Type   *v1alpha1.SecretEncryptionType `json:"type,omitempty"`
@@ -29,7 +29,7 @@ type SecretEncryptionSpecApplyConfiguration struct {
 	AESCBC *AESCBCSpecApplyConfiguration  `json:"aescbc,omitempty"`
 }
 
-// SecretEncryptionSpecApplyConfiguration constructs an declarative configuration of the SecretEncryptionSpec type for use with
+// SecretEncryptionSpecApplyConfiguration constructs a declarative configuration of the SecretEncryptionSpec type for use with
 // apply.
 func SecretEncryptionSpec() *SecretEncryptionSpecApplyConfiguration {
 	return &SecretEncryptionSpecApplyConfiguration{}

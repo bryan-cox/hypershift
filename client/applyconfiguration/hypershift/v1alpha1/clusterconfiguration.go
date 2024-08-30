@@ -23,7 +23,7 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
-// ClusterConfigurationApplyConfiguration represents an declarative configuration of the ClusterConfiguration type for use
+// ClusterConfigurationApplyConfiguration represents a declarative configuration of the ClusterConfiguration type for use
 // with apply.
 type ClusterConfigurationApplyConfiguration struct {
 	SecretRefs     []v1.LocalObjectReference    `json:"secretRefs,omitempty"`
@@ -41,7 +41,7 @@ type ClusterConfigurationApplyConfiguration struct {
 	Proxy          *configv1.ProxySpec          `json:"proxy,omitempty"`
 }
 
-// ClusterConfigurationApplyConfiguration constructs an declarative configuration of the ClusterConfiguration type for use with
+// ClusterConfigurationApplyConfiguration constructs a declarative configuration of the ClusterConfiguration type for use with
 // apply.
 func ClusterConfiguration() *ClusterConfigurationApplyConfiguration {
 	return &ClusterConfigurationApplyConfiguration{}

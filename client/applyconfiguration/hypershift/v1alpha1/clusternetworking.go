@@ -21,7 +21,7 @@ import (
 	hypershiftv1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// ClusterNetworkingApplyConfiguration represents an declarative configuration of the ClusterNetworking type for use
+// ClusterNetworkingApplyConfiguration represents a declarative configuration of the ClusterNetworking type for use
 // with apply.
 type ClusterNetworkingApplyConfiguration struct {
 	ServiceCIDR    *string                                 `json:"serviceCIDR,omitempty"`
@@ -34,7 +34,7 @@ type ClusterNetworkingApplyConfiguration struct {
 	APIServer      *APIServerNetworkingApplyConfiguration  `json:"apiServer,omitempty"`
 }
 
-// ClusterNetworkingApplyConfiguration constructs an declarative configuration of the ClusterNetworking type for use with
+// ClusterNetworkingApplyConfiguration constructs a declarative configuration of the ClusterNetworking type for use with
 // apply.
 func ClusterNetworking() *ClusterNetworkingApplyConfiguration {
 	return &ClusterNetworkingApplyConfiguration{}

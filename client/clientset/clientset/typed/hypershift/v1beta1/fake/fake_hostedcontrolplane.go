@@ -43,22 +43,24 @@ var hostedcontrolplanesKind = v1beta1.SchemeGroupVersion.WithKind("HostedControl
 
 // Get takes name of the hostedControlPlane, and returns the corresponding hostedControlPlane object, and an error if there is any.
 func (c *FakeHostedControlPlanes) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.HostedControlPlane, err error) {
+	emptyResult := &v1beta1.HostedControlPlane{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(hostedcontrolplanesResource, c.ns, name), &v1beta1.HostedControlPlane{})
+		Invokes(testing.NewGetActionWithOptions(hostedcontrolplanesResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedControlPlane), err
 }
 
 // List takes label and field selectors, and returns the list of HostedControlPlanes that match those selectors.
 func (c *FakeHostedControlPlanes) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.HostedControlPlaneList, err error) {
+	emptyResult := &v1beta1.HostedControlPlaneList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(hostedcontrolplanesResource, hostedcontrolplanesKind, c.ns, opts), &v1beta1.HostedControlPlaneList{})
+		Invokes(testing.NewListActionWithOptions(hostedcontrolplanesResource, hostedcontrolplanesKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -77,40 +79,43 @@ func (c *FakeHostedControlPlanes) List(ctx context.Context, opts v1.ListOptions)
 // Watch returns a watch.Interface that watches the requested hostedControlPlanes.
 func (c *FakeHostedControlPlanes) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(hostedcontrolplanesResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(hostedcontrolplanesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a hostedControlPlane and creates it.  Returns the server's representation of the hostedControlPlane, and an error, if there is any.
 func (c *FakeHostedControlPlanes) Create(ctx context.Context, hostedControlPlane *v1beta1.HostedControlPlane, opts v1.CreateOptions) (result *v1beta1.HostedControlPlane, err error) {
+	emptyResult := &v1beta1.HostedControlPlane{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(hostedcontrolplanesResource, c.ns, hostedControlPlane), &v1beta1.HostedControlPlane{})
+		Invokes(testing.NewCreateActionWithOptions(hostedcontrolplanesResource, c.ns, hostedControlPlane, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedControlPlane), err
 }
 
 // Update takes the representation of a hostedControlPlane and updates it. Returns the server's representation of the hostedControlPlane, and an error, if there is any.
 func (c *FakeHostedControlPlanes) Update(ctx context.Context, hostedControlPlane *v1beta1.HostedControlPlane, opts v1.UpdateOptions) (result *v1beta1.HostedControlPlane, err error) {
+	emptyResult := &v1beta1.HostedControlPlane{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(hostedcontrolplanesResource, c.ns, hostedControlPlane), &v1beta1.HostedControlPlane{})
+		Invokes(testing.NewUpdateActionWithOptions(hostedcontrolplanesResource, c.ns, hostedControlPlane, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedControlPlane), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeHostedControlPlanes) UpdateStatus(ctx context.Context, hostedControlPlane *v1beta1.HostedControlPlane, opts v1.UpdateOptions) (*v1beta1.HostedControlPlane, error) {
+func (c *FakeHostedControlPlanes) UpdateStatus(ctx context.Context, hostedControlPlane *v1beta1.HostedControlPlane, opts v1.UpdateOptions) (result *v1beta1.HostedControlPlane, err error) {
+	emptyResult := &v1beta1.HostedControlPlane{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(hostedcontrolplanesResource, "status", c.ns, hostedControlPlane), &v1beta1.HostedControlPlane{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(hostedcontrolplanesResource, "status", c.ns, hostedControlPlane, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedControlPlane), err
 }
@@ -125,7 +130,7 @@ func (c *FakeHostedControlPlanes) Delete(ctx context.Context, name string, opts 
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeHostedControlPlanes) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(hostedcontrolplanesResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(hostedcontrolplanesResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1beta1.HostedControlPlaneList{})
 	return err
@@ -133,11 +138,12 @@ func (c *FakeHostedControlPlanes) DeleteCollection(ctx context.Context, opts v1.
 
 // Patch applies the patch and returns the patched hostedControlPlane.
 func (c *FakeHostedControlPlanes) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.HostedControlPlane, err error) {
+	emptyResult := &v1beta1.HostedControlPlane{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(hostedcontrolplanesResource, c.ns, name, pt, data, subresources...), &v1beta1.HostedControlPlane{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(hostedcontrolplanesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedControlPlane), err
 }
@@ -155,11 +161,12 @@ func (c *FakeHostedControlPlanes) Apply(ctx context.Context, hostedControlPlane 
 	if name == nil {
 		return nil, fmt.Errorf("hostedControlPlane.Name must be provided to Apply")
 	}
+	emptyResult := &v1beta1.HostedControlPlane{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(hostedcontrolplanesResource, c.ns, *name, types.ApplyPatchType, data), &v1beta1.HostedControlPlane{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(hostedcontrolplanesResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedControlPlane), err
 }
@@ -178,11 +185,12 @@ func (c *FakeHostedControlPlanes) ApplyStatus(ctx context.Context, hostedControl
 	if name == nil {
 		return nil, fmt.Errorf("hostedControlPlane.Name must be provided to Apply")
 	}
+	emptyResult := &v1beta1.HostedControlPlane{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(hostedcontrolplanesResource, c.ns, *name, types.ApplyPatchType, data, "status"), &v1beta1.HostedControlPlane{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(hostedcontrolplanesResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.HostedControlPlane), err
 }

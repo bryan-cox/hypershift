@@ -17,7 +17,7 @@ limitations under the License.
 
 package v1alpha1
 
-// MarketplaceImageApplyConfiguration represents an declarative configuration of the MarketplaceImage type for use
+// MarketplaceImageApplyConfiguration represents a declarative configuration of the MarketplaceImage type for use
 // with apply.
 type MarketplaceImageApplyConfiguration struct {
 	Publisher *string `json:"publisher,omitempty"`
@@ -26,7 +26,7 @@ type MarketplaceImageApplyConfiguration struct {
 	Version   *string `json:"version,omitempty"`
 }
 
-// MarketplaceImageApplyConfiguration constructs an declarative configuration of the MarketplaceImage type for use with
+// MarketplaceImageApplyConfiguration constructs a declarative configuration of the MarketplaceImage type for use with
 // apply.
 func MarketplaceImage() *MarketplaceImageApplyConfiguration {
 	return &MarketplaceImageApplyConfiguration{}

@@ -19,8 +19,8 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/openshift/hypershift/api/scheduling/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -38,30 +38,10 @@ type ClusterSizingConfigurationLister interface {
 
 // clusterSizingConfigurationLister implements the ClusterSizingConfigurationLister interface.
 type clusterSizingConfigurationLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.ClusterSizingConfiguration]
 }
 
 // NewClusterSizingConfigurationLister returns a new ClusterSizingConfigurationLister.
 func NewClusterSizingConfigurationLister(indexer cache.Indexer) ClusterSizingConfigurationLister {
-	return &clusterSizingConfigurationLister{indexer: indexer}
-}
-
-// List lists all ClusterSizingConfigurations in the indexer.
-func (s *clusterSizingConfigurationLister) List(selector labels.Selector) (ret []*v1alpha1.ClusterSizingConfiguration, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ClusterSizingConfiguration))
-	})
-	return ret, err
-}
-
-// Get retrieves the ClusterSizingConfiguration from the index for a given name.
-func (s *clusterSizingConfigurationLister) Get(name string) (*v1alpha1.ClusterSizingConfiguration, error) {
-	obj, exists, err := s.indexer.GetByKey(name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("clustersizingconfiguration"), name)
-	}
-	return obj.(*v1alpha1.ClusterSizingConfiguration), nil
+	return &clusterSizingConfigurationLister{listers.New[*v1alpha1.ClusterSizingConfiguration](indexer, v1alpha1.Resource("clustersizingconfiguration"))}
 }

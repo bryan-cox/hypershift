@@ -17,7 +17,7 @@ limitations under the License.
 
 package v1alpha1
 
-// AWSRoleCredentialsApplyConfiguration represents an declarative configuration of the AWSRoleCredentials type for use
+// AWSRoleCredentialsApplyConfiguration represents a declarative configuration of the AWSRoleCredentials type for use
 // with apply.
 type AWSRoleCredentialsApplyConfiguration struct {
 	ARN       *string `json:"arn,omitempty"`
@@ -25,7 +25,7 @@ type AWSRoleCredentialsApplyConfiguration struct {
 	Name      *string `json:"name,omitempty"`
 }
 
-// AWSRoleCredentialsApplyConfiguration constructs an declarative configuration of the AWSRoleCredentials type for use with
+// AWSRoleCredentialsApplyConfiguration constructs a declarative configuration of the AWSRoleCredentials type for use with
 // apply.
 func AWSRoleCredentials() *AWSRoleCredentialsApplyConfiguration {
 	return &AWSRoleCredentialsApplyConfiguration{}

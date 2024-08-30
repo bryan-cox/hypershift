@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ClusterSizingConfigurationApplyConfiguration represents an declarative configuration of the ClusterSizingConfiguration type for use
+// ClusterSizingConfigurationApplyConfiguration represents a declarative configuration of the ClusterSizingConfiguration type for use
 // with apply.
 type ClusterSizingConfigurationApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -32,7 +32,7 @@ type ClusterSizingConfigurationApplyConfiguration struct {
 	Status                           *ClusterSizingConfigurationStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// ClusterSizingConfiguration constructs an declarative configuration of the ClusterSizingConfiguration type for use with
+// ClusterSizingConfiguration constructs a declarative configuration of the ClusterSizingConfiguration type for use with
 // apply.
 func ClusterSizingConfiguration(name string) *ClusterSizingConfigurationApplyConfiguration {
 	b := &ClusterSizingConfigurationApplyConfiguration{}
@@ -214,4 +214,10 @@ func (b *ClusterSizingConfigurationApplyConfiguration) WithSpec(value *ClusterSi
 func (b *ClusterSizingConfigurationApplyConfiguration) WithStatus(value *ClusterSizingConfigurationStatusApplyConfiguration) *ClusterSizingConfigurationApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *ClusterSizingConfigurationApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

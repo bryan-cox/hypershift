@@ -21,7 +21,7 @@ import (
 	v1beta1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 )
 
-// PlatformSpecApplyConfiguration represents an declarative configuration of the PlatformSpec type for use
+// PlatformSpecApplyConfiguration represents a declarative configuration of the PlatformSpec type for use
 // with apply.
 type PlatformSpecApplyConfiguration struct {
 	Type      *v1beta1.PlatformType                    `json:"type,omitempty"`
@@ -34,7 +34,7 @@ type PlatformSpecApplyConfiguration struct {
 	OpenStack *OpenStackPlatformSpecApplyConfiguration `json:"openstack,omitempty"`
 }
 
-// PlatformSpecApplyConfiguration constructs an declarative configuration of the PlatformSpec type for use with
+// PlatformSpecApplyConfiguration constructs a declarative configuration of the PlatformSpec type for use with
 // apply.
 func PlatformSpec() *PlatformSpecApplyConfiguration {
 	return &PlatformSpecApplyConfiguration{}

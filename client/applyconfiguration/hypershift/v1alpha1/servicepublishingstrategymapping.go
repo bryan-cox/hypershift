@@ -21,14 +21,14 @@ import (
 	v1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// ServicePublishingStrategyMappingApplyConfiguration represents an declarative configuration of the ServicePublishingStrategyMapping type for use
+// ServicePublishingStrategyMappingApplyConfiguration represents a declarative configuration of the ServicePublishingStrategyMapping type for use
 // with apply.
 type ServicePublishingStrategyMappingApplyConfiguration struct {
 	Service                                      *v1alpha1.ServiceType `json:"service,omitempty"`
 	*ServicePublishingStrategyApplyConfiguration `json:"servicePublishingStrategy,omitempty"`
 }
 
-// ServicePublishingStrategyMappingApplyConfiguration constructs an declarative configuration of the ServicePublishingStrategyMapping type for use with
+// ServicePublishingStrategyMappingApplyConfiguration constructs a declarative configuration of the ServicePublishingStrategyMapping type for use with
 // apply.
 func ServicePublishingStrategyMapping() *ServicePublishingStrategyMappingApplyConfiguration {
 	return &ServicePublishingStrategyMappingApplyConfiguration{}

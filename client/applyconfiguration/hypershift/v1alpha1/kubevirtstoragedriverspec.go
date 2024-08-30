@@ -21,14 +21,14 @@ import (
 	v1alpha1 "github.com/openshift/hypershift/api/hypershift/v1alpha1"
 )
 
-// KubevirtStorageDriverSpecApplyConfiguration represents an declarative configuration of the KubevirtStorageDriverSpec type for use
+// KubevirtStorageDriverSpecApplyConfiguration represents a declarative configuration of the KubevirtStorageDriverSpec type for use
 // with apply.
 type KubevirtStorageDriverSpecApplyConfiguration struct {
 	Type   *v1alpha1.KubevirtStorageDriverConfigType            `json:"type,omitempty"`
 	Manual *KubevirtManualStorageDriverConfigApplyConfiguration `json:"manual,omitempty"`
 }
 
-// KubevirtStorageDriverSpecApplyConfiguration constructs an declarative configuration of the KubevirtStorageDriverSpec type for use with
+// KubevirtStorageDriverSpecApplyConfiguration constructs a declarative configuration of the KubevirtStorageDriverSpec type for use with
 // apply.
 func KubevirtStorageDriverSpec() *KubevirtStorageDriverSpecApplyConfiguration {
 	return &KubevirtStorageDriverSpecApplyConfiguration{}
