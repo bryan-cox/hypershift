@@ -5,6 +5,7 @@ import (
 	crand "crypto/rand"
 	"errors"
 	"fmt"
+	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/secretproviderclass"
 	"math/big"
 	"net/http"
 	"os"
@@ -4132,6 +4133,24 @@ func checkCatalogImageOverides(images ...string) (bool, error) {
 
 func (r *HostedControlPlaneReconciler) reconcileImageRegistryOperator(ctx context.Context, hcp *hyperv1.HostedControlPlane, releaseImageProvider, userReleaseImageProvider *imageprovider.SimpleReleaseImageProvider, createOrUpdate upsert.CreateOrUpdateFN) error {
 	params := registryoperator.NewParams(hcp, userReleaseImageProvider.Version(), releaseImageProvider, userReleaseImageProvider, r.SetDefaultSecurityContext)
+
+	// Create SecretProviderClass when deploying on managed Azure
+	if hyperazureutil.IsAroHCP() {
+		imageRegistrySecretProviderClass := manifests.ManagedAzureSecretProviderClass(config.ManagedAzureImageRegistrySecretStoreProviderClassName, hcp.Namespace)
+		if _, err := createOrUpdate(ctx, r, imageRegistrySecretProviderClass, func() error {
+			secretproviderclass.ReconcileManagedAzureSecretProviderClass(imageRegistrySecretProviderClass, hcp, hcp.Spec.Platform.Azure.ManagedIdentities.ControlPlane.ImageRegistry.CertificateName)
+			return nil
+		}); err != nil {
+			return fmt.Errorf("failed to reconcile image registry operator secret provider class: %w", err)
+		}
+
+		credentialsSecret := manifests.AzureCredentialInformation(hcp.Namespace)
+		if err := r.Client.Get(ctx, client.ObjectKeyFromObject(credentialsSecret), credentialsSecret); err != nil {
+			return fmt.Errorf("failed to get Azure credentials secret: %w", err)
+		}
+
+		params.AzureTenantID = string(credentialsSecret.Data["AZURE_TENANT_ID"])
+	}
 
 	deployment := manifests.ImageRegistryOperatorDeployment(hcp.Namespace)
 	if _, err := createOrUpdate(ctx, r, deployment, func() error {
