@@ -31,7 +31,14 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="pmon"
 
-// PodMonitor defines monitoring for a set of pods.
+// The `PodMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of pods.
+// Among other things, it allows to specify:
+// * The pods to scrape via label selectors.
+// * The container ports to scrape.
+// * Authentication credentials to use.
+// * Target and metric relabeling.
+//
+// `Prometheus` and `PrometheusAgent` objects select `PodMonitor` objects using label and namespace selectors.
 type PodMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -64,15 +71,15 @@ type PodMonitorSpec struct {
 	//
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
-	// List of endpoints part of this PodMonitor.
+	// Defines how to scrape metrics from the selected pods.
 	//
 	// +optional
 	PodMetricsEndpoints []PodMetricsEndpoint `json:"podMetricsEndpoints"`
 
-	// Label selector to select the Kubernetes `Pod` objects.
+	// Label selector to select the Kubernetes `Pod` objects to scrape metrics from.
 	Selector metav1.LabelSelector `json:"selector"`
-	// Selector to select which namespaces the Kubernetes `Pods` objects
-	// are discovered from.
+	// `namespaceSelector` defines in which namespace(s) Prometheus should discover the pods.
+	// By default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
 	// `sampleLimit` defines a per-scrape limit on the number of scraped samples
@@ -86,6 +93,17 @@ type PodMonitorSpec struct {
 	//
 	// +optional
 	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+
+	// `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
+	//
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v2.49.0.
+	//
+	// +listType=set
+	// +optional
+	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	//
@@ -105,6 +123,9 @@ type PodMonitorSpec struct {
 	//
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+
+	NativeHistogramConfig `json:",inline"`
+
 	// Per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -116,10 +137,23 @@ type PodMonitorSpec struct {
 	// `attachMetadata` defines additional metadata which is added to the
 	// discovered targets.
 	//
-	// It requires Prometheus >= v2.37.0.
+	// It requires Prometheus >= v2.35.0.
 	//
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+
+	// The scrape class to apply.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
+
+	// When defined, bodySizeLimit specifies a job level limit on the size
+	// of uncompressed response body that will be accepted by Prometheus.
+	//
+	// It requires Prometheus >= v2.28.0.
+	//
+	// +optional
+	BodySizeLimit *ByteSize `json:"bodySizeLimit,omitempty"`
 }
 
 // PodMonitorList is a list of PodMonitors.
@@ -186,7 +220,7 @@ type PodMetricsEndpoint struct {
 	// TLS configuration to use when scraping the target.
 	//
 	// +optional
-	TLSConfig *PodMetricsEndpointTLSConfig `json:"tlsConfig,omitempty"`
+	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 
 	// `bearerTokenSecret` specifies a key of a Secret containing the bearer
 	// token for scraping targets. The secret needs to be in the same namespace
@@ -245,7 +279,7 @@ type PodMetricsEndpoint struct {
 	// samples before ingestion.
 	//
 	// +optional
-	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
+	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
 
 	// `relabelings` configures the relabeling rules to apply the target's
 	// metadata labels.
@@ -257,7 +291,7 @@ type PodMetricsEndpoint struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	//
 	// +optional
-	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
+	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
 	// `proxyURL` configures the HTTP Proxy URL (e.g.
 	// "http://proxyserver:2195") to go through when scraping the target.
@@ -285,10 +319,4 @@ type PodMetricsEndpoint struct {
 	//
 	// +optional
 	FilterRunning *bool `json:"filterRunning,omitempty"`
-}
-
-// PodMetricsEndpointTLSConfig specifies TLS configuration parameters.
-// +k8s:openapi-gen=true
-type PodMetricsEndpointTLSConfig struct {
-	SafeTLSConfig `json:",inline"`
 }
