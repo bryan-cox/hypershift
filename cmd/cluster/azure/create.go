@@ -35,6 +35,7 @@ func DefaultOptions(client crclient.Client, log logr.Logger) (*RawCreateOptions,
 		Location:           "eastus",
 		TechPreviewEnabled: false,
 		NodePoolOpts:       azurenodepool.DefaultOptions(),
+		DNSZoneRGName:      "os4-common",
 	}
 
 	if client == nil {
@@ -77,6 +78,7 @@ func bindCoreOptions(opts *RawCreateOptions, flags *pflag.FlagSet) {
 		flags.StringVar(&opts.KeyVaultInfo.KeyVaultName, "management-key-vault-name", opts.KeyVaultInfo.KeyVaultName, "The name of the management Azure Key Vault where the managed identity certificates are stored.")
 		flags.StringVar(&opts.KeyVaultInfo.KeyVaultTenantID, "management-key-vault-tenant-id", opts.KeyVaultInfo.KeyVaultTenantID, "The tenant ID of the management Azure Key Vault where the managed identity certificates are stored.")
 		flags.StringVar(&opts.MangedIdentitiesFile, "managed-identities-file", opts.MangedIdentitiesFile, "Path to a file containing the managed identities configuration in json format.")
+		flags.StringVar(&opts.DNSZoneRGName, "dns-zone-rg-name", opts.DNSZoneRGName, "The name of the resource group where the DNS Zone resides. This is needed for the ingress controller. This is just the name and not the full ID of the resource group.")
 		flags.StringVar(&opts.ImageRegistryClientID, "ir-client-id", "", "The MSI client ID associated with the image-registry controller service-account on the guest cluster.")
 		flags.StringVar(&opts.CSIDiskClientID, "csi-disk-client-id", "", "The MSI client ID associated with the CSI disk controller service-account on the guest cluster.")
 		flags.StringVar(&opts.CSIFileClientID, "csi-file-client-id", "", "The MSI client ID associated with the CSI file controller service-account on the guest cluster.")
@@ -105,6 +107,7 @@ type RawCreateOptions struct {
 	TechPreviewEnabled     bool
 	KeyVaultInfo           ManagementKeyVaultInfo
 	MangedIdentitiesFile   string
+	DNSZoneRGName          string
 	IssuerURL                        string
 	ServiceAccountTokenIssuerKeyPath string
 	CSIDiskClientID                  string
@@ -592,6 +595,7 @@ func CreateInfraOptions(ctx context.Context, azureOpts *ValidatedCreateOptions, 
 		ManagedIdentityKeyVaultTenantID: azureOpts.KeyVaultInfo.KeyVaultTenantID,
 		TechPreviewEnabled:              azureOpts.TechPreviewEnabled,
 		ManagedIdentitiesFile:           azureOpts.MangedIdentitiesFile,
+		DNSZoneRG:                       azureOpts.DNSZoneRGName,
 	}, nil
 }
 
