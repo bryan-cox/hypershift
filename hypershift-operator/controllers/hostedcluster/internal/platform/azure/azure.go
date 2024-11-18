@@ -6,6 +6,7 @@ import (
 	"os"
 
 	hyperv1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
+	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/manifests"
 	"github.com/openshift/hypershift/support/azureutil"
 	"github.com/openshift/hypershift/support/images"
 	"github.com/openshift/hypershift/support/upsert"
@@ -56,7 +57,7 @@ func (a Azure) ReconcileCAPIInfraCR(
 	}
 
 	if _, err := createOrUpdate(ctx, client, azureClusterIdentity, func() error {
-		return reconcileAzureClusterIdentity(ctx, client, hcluster, azureClusterIdentity, controlPlaneNamespace)
+		return reconcileAzureClusterIdentity(ctx, client, azureClusterIdentity, controlPlaneNamespace)
 	}); err != nil {
 		return nil, fmt.Errorf("failed to reconcile Azure cluster identity: %w", err)
 	}
@@ -151,13 +152,18 @@ func (a Azure) ReconcileCredentials(ctx context.Context, c client.Client, create
 		return fmt.Errorf("failed to get secret %s: %w", name, err)
 	}
 
-	userCloudCreds := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: controlPlaneNamespace, Name: name.Name}}
-	if _, err := createOrUpdate(ctx, c, userCloudCreds, func() error {
-		if userCloudCreds.Data == nil {
-			userCloudCreds.Data = map[string][]byte{}
+	// Reconcile the user cloud-credentials secret contents into the control plane version of the same secret,
+	// azure-credential-information. This secret is primarily used in retrieving the tenant ID, which is needed anytime
+	// an HCP component needs to authenticate with Azure Cloud. The operators needing this information are ingress
+	// cluster network config controller, azure disk/file CSI drivers, CAPZ, cloud provider, control plane operator, and
+	// KMS.
+	azureCredsInfo := manifests.AzureCredentialInformation(controlPlaneNamespace)
+	if _, err := createOrUpdate(ctx, c, azureCredsInfo, func() error {
+		if azureCredsInfo.Data == nil {
+			azureCredsInfo.Data = map[string][]byte{}
 		}
 		for k, v := range source.Data {
-			userCloudCreds.Data[k] = v
+			azureCredsInfo.Data[k] = v
 		}
 		return nil
 	}); err != nil {
@@ -184,13 +190,13 @@ func (a Azure) ReconcileCredentials(ctx context.Context, c client.Client, create
 	// Sync CNCC secret
 	cloudNetworkConfigCreds := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: controlPlaneNamespace, Name: "cloud-network-config-controller-creds"}}
 	secretData := map[string][]byte{
-		"azure_client_id":       userCloudCreds.Data["AZURE_CLIENT_ID"],
-		"azure_client_secret":   userCloudCreds.Data["AZURE_CLIENT_SECRET"],
+		"azure_client_id":       azureCredsInfo.Data["AZURE_CLIENT_ID"],
+		"azure_client_secret":   azureCredsInfo.Data["AZURE_CLIENT_SECRET"],
 		"azure_region":          []byte(hcluster.Spec.Platform.Azure.Location),
 		"azure_resource_prefix": []byte(hcluster.Name + "-" + hcluster.Spec.InfraID),
 		"azure_resourcegroup":   []byte(hcluster.Spec.Platform.Azure.ResourceGroupName),
-		"azure_subscription_id": userCloudCreds.Data["AZURE_SUBSCRIPTION_ID"],
-		"azure_tenant_id":       userCloudCreds.Data["AZURE_TENANT_ID"],
+		"azure_subscription_id": azureCredsInfo.Data["AZURE_SUBSCRIPTION_ID"],
+		"azure_tenant_id":       azureCredsInfo.Data["AZURE_TENANT_ID"],
 	}
 	if _, err := createOrUpdate(ctx, c, cloudNetworkConfigCreds, func() error {
 		cloudNetworkConfigCreds.Data = secretData
@@ -247,10 +253,10 @@ func reconcileAzureCluster(azureCluster *capiazure.AzureCluster, hcluster *hyper
 	return nil
 }
 
-func reconcileAzureClusterIdentity(ctx context.Context, c client.Client, hcluster *hyperv1.HostedCluster, azureClusterIdentity *capiazure.AzureClusterIdentity, controlPlaneNamespace string) error {
-	credentialsSecret := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: hcluster.Spec.Platform.Azure.Credentials.Name, Namespace: controlPlaneNamespace}}
+func reconcileAzureClusterIdentity(ctx context.Context, c client.Client, azureClusterIdentity *capiazure.AzureClusterIdentity, controlPlaneNamespace string) error {
+	credentialsSecret := manifests.AzureCredentialInformation(controlPlaneNamespace)
 	if err := c.Get(ctx, client.ObjectKeyFromObject(credentialsSecret), credentialsSecret); err != nil {
-		return fmt.Errorf("failed to get secret %s: %w", credentialsSecret, err)
+		return fmt.Errorf("failed to get Azure credentials secret: %w", err)
 	}
 
 	azureClusterIdentity.Spec = capiazure.AzureClusterIdentitySpec{
