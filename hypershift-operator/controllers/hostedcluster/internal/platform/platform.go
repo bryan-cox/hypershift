@@ -116,7 +116,7 @@ func GetPlatform(ctx context.Context, hcluster *hyperv1.HostedCluster, releasePr
 		//		return nil, fmt.Errorf("failed to retrieve capi image: %w", err)
 		//	}
 		//}
-		capiImageProvider = "quay.io/rh_ee_brcox/hypershift/cluster-api-azure-controller-amd64:capz-with-cert"
+		capiImageProvider = "quay.io/rh_ee_brcox/hypershift/cluster-api-azure-controller-amd64:dev"
 		platform = azure.New(capiImageProvider)
 	case hyperv1.PowerVSPlatform:
 		if pullSecretBytes != nil {
