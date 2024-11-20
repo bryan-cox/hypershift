@@ -5,7 +5,6 @@ import (
 	crand "crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/secretproviderclass"
 	"math/big"
 	"net/http"
 	"os"

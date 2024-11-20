@@ -222,7 +222,7 @@ func ReconcileDeployment(deployment *appsv1.Deployment, params Params) error {
 			deployment.Spec.Template.Spec.Volumes = []corev1.Volume{}
 		}
 		deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes,
-			azureutil.CreateVolumeForAzureSecretStoreProviderClass(config.ManagedAzureIngressSecretStoreVolumeName, config.ManagedAzureImageRegistrySecretStoreProviderClassName),
+			azureutil.CreateVolumeForAzureSecretStoreProviderClass(config.ManagedAzureImageRegistrySecretStoreVolumeName, config.ManagedAzureImageRegistrySecretStoreProviderClassName),
 		)
 	}
 
