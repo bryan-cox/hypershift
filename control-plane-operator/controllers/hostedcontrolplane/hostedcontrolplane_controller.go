@@ -944,9 +944,15 @@ func (r *HostedControlPlaneReconciler) update(ctx context.Context, hostedControl
 	}
 
 	if r.IsCPOV2 {
+		r.Log.Info("hostedControlPlane resource version before CPOv2 reconcile: " + hostedControlPlane.ResourceVersion)
 		if err := r.reconcileCPOV2(ctx, hostedControlPlane, infraStatus, releaseImageProvider, userReleaseImageProvider); err != nil {
 			errs = append(errs, err)
 		}
+		err := r.Client.Get(ctx, client.ObjectKeyFromObject(hostedControlPlane), hostedControlPlane)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		r.Log.Info("hostedControlPlane resource version after CPOv2 reconcile: " + hostedControlPlane.ResourceVersion)
 	}
 
 	originalHostedControlPlane := hostedControlPlane.DeepCopy()
@@ -992,11 +998,24 @@ func (r *HostedControlPlaneReconciler) reconcileCPOV2(ctx context.Context, hcp *
 	}
 
 	var errs []error
+
+	err := r.Client.Get(ctx, client.ObjectKeyFromObject(hcp), hcp)
+	if err != nil {
+		return err
+	}
 	for _, c := range r.components {
+		r.Log.Info("hostedControlPlane resource version before component reconcile: " + hcp.ResourceVersion)
 		r.Log.Info("Reconciling component", "component_name", c.Name())
+
 		if err := c.Reconcile(cpContext); err != nil {
 			errs = append(errs, err)
 		}
+
+		err := r.Client.Get(ctx, client.ObjectKeyFromObject(hcp), hcp)
+		if err != nil {
+			return err
+		}
+		r.Log.Info("hostedControlPlane resource version after component reconcile: " + hcp.ResourceVersion)
 	}
 
 	return utilerrors.NewAggregate(errs)
