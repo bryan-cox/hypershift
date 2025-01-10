@@ -1,6 +1,7 @@
 module github.com/openshift/hypershift
 
 go 1.22.0
+toolchain go1.22.5
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.16.0
@@ -14,12 +15,12 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.5.0
 	github.com/Azure/go-autorest/autorest v0.11.29
-	github.com/IBM-Cloud/power-go-client v1.6.0
-	github.com/IBM/go-sdk-core/v5 v5.17.4
-	github.com/IBM/ibm-cos-sdk-go v1.10.3
-	github.com/IBM/networking-go-sdk v0.45.0
-	github.com/IBM/platform-services-go-sdk v0.64.4
-	github.com/IBM/vpc-go-sdk v0.50.0
+	github.com/IBM-Cloud/power-go-client v1.9.0
+	github.com/IBM/go-sdk-core/v5 v5.18.1
+	github.com/IBM/ibm-cos-sdk-go v1.12.0
+	github.com/IBM/networking-go-sdk v0.49.0
+	github.com/IBM/platform-services-go-sdk v0.69.1
+	github.com/IBM/vpc-go-sdk v0.64.0
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/aws/aws-sdk-go v1.52.6
 	github.com/blang/semver v3.5.1+incompatible
@@ -139,7 +140,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.21.5 // indirect
-	github.com/go-openapi/errors v0.21.0 // indirect
+	github.com/go-openapi/errors v0.22.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/loads v0.21.3 // indirect
