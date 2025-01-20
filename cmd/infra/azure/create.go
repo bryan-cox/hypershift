@@ -264,6 +264,34 @@ func (o *CreateInfraOptions) Run(ctx context.Context, l logr.Logger) (*CreateInf
 		if err := yaml.Unmarshal(dataPlaneIdentitiesRaw, &result.DataPlaneIdentities); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal --data-plane-identities-file: %w", err)
 		}
+
+		// Setup Data Plane MI role assignments
+		objectID, err := findObjectId(result.DataPlaneIdentities.ImageRegistryMSIClientID)
+		if err != nil {
+			return nil, err
+		}
+		err = assignRole(objectID, "Azure Red Hat OpenShift Image Registry Operator Role", resourceGroupName)
+		if err != nil {
+			return nil, err
+		}
+
+		objectID, err = findObjectId(result.DataPlaneIdentities.DiskMSIClientID)
+		if err != nil {
+			return nil, err
+		}
+		err = assignRole(objectID, "Azure Red Hat OpenShift Storage Operator Role", resourceGroupName)
+		if err != nil {
+			return nil, err
+		}
+
+		objectID, err = findObjectId(result.DataPlaneIdentities.FileMSIClientID)
+		if err != nil {
+			return nil, err
+		}
+		err = assignRole(objectID, "Azure Red Hat OpenShift Azure Files Storage Operator Role", resourceGroupName)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Create private DNS zone
