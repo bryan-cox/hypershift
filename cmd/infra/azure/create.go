@@ -851,6 +851,7 @@ func assignServicePrincipalRoles(subscriptionID, managedResourceGroupName, nsgRe
 // assignRole assigns the role to the service principal
 func assignRole(assigneeID, role, scope string) error {
 	cmdStr := fmt.Sprintf("az role assignment create --assignee-object-id %s --role \"%s\" --scope %s --assignee-principal-type \"ServicePrincipal\" ", assigneeID, role, scope)
+	log.Log.Info("Command: '" + cmdStr + "'")
 	_, err := execAzCommand(cmdStr)
 	if err != nil {
 		return fmt.Errorf("failed to assign %s role to service principal, %s for scope %s : %w", role, assigneeID, scope, err)
