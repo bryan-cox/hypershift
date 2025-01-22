@@ -58,9 +58,9 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&targetKubeconfig, "target-kubeconfig", "", "Path to guest side kubeconfig file. Where the karpenter CRs (nodeClaim, nodePool, nodeClass) live")
 	rootCmd.PersistentFlags().StringVar(&namespace, "namespace", "", "The namespace to infer input for reconciliation, e.g the userData secret")
 	rootCmd.PersistentFlags().StringVar(&controlPlaneOperatorImage, "control-plane-operator-image", "", "The image to run the tokenMinter and the availability prober")
-	rootCmd.MarkPersistentFlagRequired("target-kubeconfig")
-	rootCmd.MarkPersistentFlagRequired("namespace")
-	rootCmd.MarkPersistentFlagRequired("control-plane-operator-image")
+	_ = rootCmd.MarkPersistentFlagRequired("target-kubeconfig")
+	_ = rootCmd.MarkPersistentFlagRequired("namespace")
+	_ = rootCmd.MarkPersistentFlagRequired("control-plane-operator-image")
 
 	if err := rootCmd.Execute(); err != nil {
 		setupLog.Error(err, "problem executing command")
