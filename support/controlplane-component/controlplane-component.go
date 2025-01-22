@@ -263,7 +263,10 @@ func (c *controlPlaneWorkload) update(cpContext ControlPlaneContext) error {
 		_, disablePKIReconciliationAnnotation := cpContext.HCP.Annotations[hyperv1.DisablePKIReconciliationAnnotation]
 		if !disablePKIReconciliationAnnotation {
 			kubeconfigSecret := c.serviceAccountKubeconfigSecret(cpContext.workloadContext())
-			c.adaptServiceAccountKubeconfigSecret(cpContext.workloadContext(), kubeconfigSecret)
+			err := c.adaptServiceAccountKubeconfigSecret(cpContext.workloadContext(), kubeconfigSecret)
+			if err != nil {
+				return err
+			}
 			if _, err := cpContext.CreateOrUpdateV2(cpContext, cpContext.Client, kubeconfigSecret); err != nil {
 				return err
 			}

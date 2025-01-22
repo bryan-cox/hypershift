@@ -33,7 +33,9 @@ func WatchFileForChanges(fileToWatch string) error {
 		log.Info("Watching file...", "file", fileToWatch)
 
 		// Start the file watcher to monitor file changes
-		go checkForFileChanges(fileToWatch)
+		go func() {
+			_ = checkForFileChanges(fileToWatch)
+		}()
 	})
 	return err
 }
