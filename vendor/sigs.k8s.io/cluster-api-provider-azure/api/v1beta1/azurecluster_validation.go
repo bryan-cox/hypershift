@@ -28,9 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
 	"sigs.k8s.io/cluster-api-provider-azure/feature"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 const (
@@ -509,7 +508,7 @@ func validateControlPlaneOutboundLB(lb *LoadBalancerSpec, apiserverLB LoadBalanc
 func validatePrivateDNSZoneName(privateDNSZoneName string, apiserverLBType LBType, fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	if privateDNSZoneName != "" {
+	if len(privateDNSZoneName) > 0 {
 		if apiserverLBType != Internal {
 			allErrs = append(allErrs, field.Invalid(fldPath, apiserverLBType,
 				"PrivateDNSZoneName is available only if APIServerLB.Type is Internal"))
