@@ -1,8 +1,8 @@
 package cno
 
 import (
-	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/secretproviderclass"
 	component "github.com/openshift/hypershift/support/controlplane-component"
+	"github.com/openshift/hypershift/support/secretproviderclass"
 
 	secretsstorev1 "sigs.k8s.io/secrets-store-csi-driver/apis/v1"
 )

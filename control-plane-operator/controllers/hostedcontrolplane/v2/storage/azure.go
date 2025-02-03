@@ -6,11 +6,11 @@ import (
 	"path"
 
 	hyperv1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
-	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/secretproviderclass"
 	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/v2/cloud_controller_manager/azure"
 	hyperazureutil "github.com/openshift/hypershift/support/azureutil"
 	hyperconfig "github.com/openshift/hypershift/support/config"
 	component "github.com/openshift/hypershift/support/controlplane-component"
+	"github.com/openshift/hypershift/support/secretproviderclass"
 
 	corev1 "k8s.io/api/core/v1"
 
