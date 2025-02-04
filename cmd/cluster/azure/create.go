@@ -295,6 +295,17 @@ func (o *CreateOptions) ApplyPlatformSpecifics(cluster *hyperv1.HostedCluster) e
 		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.Network.ObjectEncoding = ObjectEncoding
 		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.Disk.ObjectEncoding = ObjectEncoding
 		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.File.ObjectEncoding = ObjectEncoding
+
+		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.ControlPlaneOperator.CertificateName = ""
+		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.ControlPlaneOperator.CredentialsSecretName = "brcox-cpo-credentials-secret"
+
+		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.CloudProvider.CredentialsSecretName = ObjectEncoding
+		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.NodePoolManagement.CredentialsSecretName = ObjectEncoding
+		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.ImageRegistry.CredentialsSecretName = ObjectEncoding
+		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.Ingress.CredentialsSecretName = ObjectEncoding
+		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.Network.CredentialsSecretName = ObjectEncoding
+		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.Disk.CredentialsSecretName = ObjectEncoding
+		cluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.File.CredentialsSecretName = ObjectEncoding
 	}
 
 	if o.encryptionKey != nil {
