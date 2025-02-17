@@ -35,8 +35,8 @@ linters:
     - ineffassign
     - gosimple
     - govet
-  disable:
     - errcheck
+  disable:
     - staticcheck
 linters-settings:
   gci:

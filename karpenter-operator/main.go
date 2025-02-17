@@ -88,7 +88,7 @@ func run(ctx context.Context) error {
 	scheme.AddKnownTypes(karpanterGroupVersion, &karpenterv1.NodePool{})
 	scheme.AddKnownTypes(karpanterGroupVersion, &karpenterv1.NodePoolList{})
 
-	hyperkarpenterv1.AddToScheme(scheme)
+	_ = hyperkarpenterv1.AddToScheme(scheme)
 
 	managementCluster, err := cluster.New(managementKubeconfig, func(opt *cluster.Options) {
 		opt.Cache = cache.Options{
