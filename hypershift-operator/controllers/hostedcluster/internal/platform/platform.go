@@ -113,12 +113,13 @@ func GetPlatform(ctx context.Context, hcluster *hyperv1.HostedCluster, releasePr
 	case hyperv1.KubevirtPlatform:
 		platform = &kubevirt.Kubevirt{}
 	case hyperv1.AzurePlatform:
-		if pullSecretBytes != nil {
-			capiImageProvider, err = imgUtil.GetPayloadImage(ctx, releaseProvider, hcluster, AzureCAPIProvider, pullSecretBytes)
-			if err != nil {
-				return nil, fmt.Errorf("failed to retrieve capi image: %w", err)
-			}
-		}
+		//if pullSecretBytes != nil {
+		//	capiImageProvider, err = imgUtil.GetPayloadImage(ctx, releaseProvider, hcluster, AzureCAPIProvider, pullSecretBytes)
+		//	if err != nil {
+		//		return nil, fmt.Errorf("failed to retrieve capi image: %w", err)
+		//	}
+		//}
+		capiImageProvider = "quay.io/rh_ee_brcox/hypershift:capz-with-uami-brcox"
 		platform = azure.New(capiImageProvider)
 	case hyperv1.PowerVSPlatform:
 		if pullSecretBytes != nil {

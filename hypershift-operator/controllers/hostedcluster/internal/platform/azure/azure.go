@@ -77,7 +77,7 @@ func (a Azure) ReconcileCAPIInfraCR(
 		if err := c.Get(ctx, client.ObjectKeyFromObject(hcp), hcp); err != nil {
 			return err
 		}
-		secretproviderclass.ReconcileManagedAzureSecretProviderClass(nodepoolMgmtSecretProviderClass, hcp, hcluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.NodePoolManagement)
+		secretproviderclass.ReconcileManagedAzureSecretProviderClass(nodepoolMgmtSecretProviderClass, hcp, hcluster.Spec.Platform.Azure.ManagedIdentities.ControlPlane.NodePoolManagement, true)
 		return nil
 	}); err != nil {
 		return nil, fmt.Errorf("failed to reconcile KMS SecretProviderClass: %w", err)
@@ -250,10 +250,10 @@ func reconcileAzureCluster(azureCluster *capiazure.AzureCluster, hcluster *hyper
 
 func reconcileAzureClusterIdentity(hc *hyperv1.HostedCluster, azureClusterIdentity *capiazure.AzureClusterIdentity, controlPlaneNamespace string) error {
 	azureClusterIdentity.Spec = capiazure.AzureClusterIdentitySpec{
-		ClientID: hc.Spec.Platform.Azure.ManagedIdentities.ControlPlane.NodePoolManagement.ClientID,
-		TenantID: hc.Spec.Platform.Azure.TenantID,
-		CertPath: config.ManagedAzureCertificatePath + hc.Spec.Platform.Azure.ManagedIdentities.ControlPlane.NodePoolManagement.CertificateName,
-		Type:     capiazure.ServicePrincipalCertificate,
+		ClientID:                            hc.Spec.Platform.Azure.ManagedIdentities.ControlPlane.NodePoolManagement.ClientID,
+		TenantID:                            hc.Spec.Platform.Azure.TenantID,
+		UserAssignedIdentityCredentialsPath: config.ManagedAzureCertificatePath + hc.Spec.Platform.Azure.ManagedIdentities.ControlPlane.NodePoolManagement.CredentialsSecretName,
+		Type:                                capiazure.UserAssignedIdentityCredential,
 		AllowedNamespaces: &capiazure.AllowedNamespaces{
 			NamespaceList: []string{
 				controlPlaneNamespace,
