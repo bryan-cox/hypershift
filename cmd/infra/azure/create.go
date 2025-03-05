@@ -485,7 +485,7 @@ func createVirtualNetwork(ctx context.Context, subscriptionID string, resourceGr
 		return armnetwork.VirtualNetworksClientCreateOrUpdateResponse{}, fmt.Errorf("failed to wait for vnet creation: %w", err)
 	}
 
-	if vnet.ID == nil || vnet.Name == nil {
+	if vnet.ID == nil || vnet.Name == nil { //
 		return armnetwork.VirtualNetworksClientCreateOrUpdateResponse{}, fmt.Errorf("created vnet has no ID or name")
 	}
 
