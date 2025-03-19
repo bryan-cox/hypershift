@@ -35,6 +35,7 @@ linters:
     - gosimple # simplify code
     - govet # basically 'go vet'
     - ineffassign # ineffectual assignments
+    - misspell # spelling
     - unused # unused constants, variables, functions, types
     - usestdlibvars # using variables/constants from the standard library
   disable:
@@ -52,3 +53,7 @@ linters-settings:
       - prefix(sigs.k8s.io)
       - default
     custom-order: true
+  misspell:
+    ignore-words:
+      - NTO
+      - nto
