@@ -30,11 +30,15 @@ issues:
       text: "const `tuningConfigKey` is unused"
 linters:
   enable:
+    - asasalint # warns about passing []any to func(...any) without expanding it
+    - asciicheck # non ascii symbols
+    - bidichk # dangerous unicode sequences
     - errcheck # unchecked errors
     - gci # ensures imports are organized
     - gosimple # simplify code
     - govet # basically 'go vet'
     - ineffassign # ineffectual assignments
+    - loggercheck # check for even key/value pairs in logger calls
     - misspell # spelling
     - unused # unused constants, variables, functions, types
     - usestdlibvars # using variables/constants from the standard library

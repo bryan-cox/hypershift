@@ -876,7 +876,7 @@ func (r *AWSEndpointServiceReconciler) createSecurityGroup(ctx context.Context, 
 		return nil, err
 	}
 	if sg == nil {
-		log.Error(errors.New("security group not found"), "id", sgID)
+		log.Error(errors.New("security group not found"), "", "id", sgID)
 		return nil, fmt.Errorf("failed to fetch security group (id: %s)", sgID)
 	}
 	log.Info("created security group", "id", sgID)
