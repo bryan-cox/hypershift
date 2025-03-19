@@ -30,12 +30,13 @@ issues:
       text: "const `tuningConfigKey` is unused"
 linters:
   enable:
-    - gci
-    - unused
-    - ineffassign
-    - gosimple
-    - errcheck
-    - govet
+    - errcheck # unchecked errors
+    - gci # ensures imports are organized
+    - gosimple # simplify code
+    - govet # basically 'go vet'
+    - ineffassign # ineffectual assignments
+    - unused # unused constants, variables, functions, types
+    - usestdlibvars # using variables/constants from the standard library
   disable:
     - staticcheck
 linters-settings:

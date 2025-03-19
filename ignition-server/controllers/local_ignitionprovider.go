@@ -660,7 +660,7 @@ func (p *LocalIgnitionProvider) GetPayload(ctx context.Context, releaseImage, cu
 		}
 		var payload []byte
 		err = wait.PollUntilWithContext(ctx, 1*time.Second, func(ctx context.Context) (bool, error) {
-			req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:22626/config/master", nil)
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:22626/config/master", nil)
 			if err != nil {
 				return false, fmt.Errorf("error building http request: %w", err)
 			}

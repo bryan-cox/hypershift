@@ -318,7 +318,7 @@ func (p *konnectivityProxy) DialContext(ctx context.Context, network string, req
 		return nil, fmt.Errorf("reading HTTP response from CONNECT to %s via proxy %s failed: %v",
 			requestAddress, konnectivityServerAddress, err)
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		log.V(4).Info("Status code was not 200", "statusCode", res.StatusCode)
 		return nil, fmt.Errorf("proxy error from %s while dialing %s: %v", konnectivityServerAddress, requestAddress, res.Status)
 	}

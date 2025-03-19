@@ -14,8 +14,8 @@ import (
 	"time"
 
 	hyperv1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
-	kas "github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/kas"
-	manifests "github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/manifests"
+	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/kas"
+	"github.com/openshift/hypershift/control-plane-operator/controllers/hostedcontrolplane/manifests"
 	"github.com/openshift/hypershift/support/konnectivityproxy"
 	supportproxy "github.com/openshift/hypershift/support/proxy"
 	"github.com/openshift/hypershift/support/util"
@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/cache"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/net"
-	clientcmd "k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/utils/ptr"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -624,7 +624,7 @@ func checkOIDCPasswordGrantFlow(ctx context.Context,
 	reqCtx, cancel := context.WithTimeout(ctx, externalHTTPRequestTimeout)
 	defer cancel()
 
-	req, err := http.NewRequest("POST", tokenURL, body)
+	req, err := http.NewRequest(http.MethodPost, tokenURL, body)
 	if err != nil {
 		return false, err
 	}
