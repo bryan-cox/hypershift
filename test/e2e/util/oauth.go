@@ -186,6 +186,7 @@ func WaitForOAuthRouteReady(t *testing.T, ctx context.Context, client crclient.C
 		if err != nil {
 			t.Logf("Waiting for OAuth route %s to be ready: %v", route.Spec.Host, err)
 		}
+		defer resp.Body.Close()
 		return false, nil
 	})
 	g.Expect(err).ToNot(HaveOccurred(), "failed waiting for OAuth route %s", route.Spec.Host)

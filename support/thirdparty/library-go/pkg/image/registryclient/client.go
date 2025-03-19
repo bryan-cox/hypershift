@@ -234,7 +234,7 @@ func (c *Context) ping(registry url.URL, insecure bool, transport http.RoundTrip
 	if err != nil {
 		return nil, err
 	}
-	resp, err := pingClient.Do(req)
+	resp, err := pingClient.Do(req) //nolint:bodyclose
 	if err != nil {
 		if insecure && registry.Scheme == "https" {
 			registry.Scheme = "http"

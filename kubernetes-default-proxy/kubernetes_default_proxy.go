@@ -115,6 +115,7 @@ func (s *server) run(ctx context.Context) error {
 				s.log.Error(fmt.Errorf("got unexpected statuscode %d to CONNECT request", response.StatusCode), "failed to establish a connection through http connect")
 				return
 			}
+			defer response.Body.Close()
 
 			closer := make(chan struct{}, 2)
 			go s.copy(closer, backendConn, conn)

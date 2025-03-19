@@ -33,6 +33,7 @@ linters:
     - asasalint # warns about passing []any to func(...any) without expanding it
     - asciicheck # non ascii symbols
     - bidichk # dangerous unicode sequences
+    - bodyclose # unclosed http bodies
     - errcheck # unchecked errors
     - gci # ensures imports are organized
     - gosimple # simplify code

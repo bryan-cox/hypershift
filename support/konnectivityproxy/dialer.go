@@ -322,6 +322,7 @@ func (p *konnectivityProxy) DialContext(ctx context.Context, network string, req
 		log.V(4).Info("Status code was not 200", "statusCode", res.StatusCode)
 		return nil, fmt.Errorf("proxy error from %s while dialing %s: %v", konnectivityServerAddress, requestAddress, res.Status)
 	}
+	defer res.Body.Close()
 	// It's safe to discard the bufio.Reader here and return the original TCP conn directly because we only use this
 	// for TLS. In TLS, the client speaks first, so we know there's no unbuffered data, but we can double-check.
 	if br.Buffered() > 0 {
