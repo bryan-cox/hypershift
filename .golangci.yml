@@ -34,6 +34,7 @@ linters:
     - asciicheck # non ascii symbols
     - bidichk # dangerous unicode sequences
     - bodyclose # unclosed http bodies
+    - durationcheck # prevent erroneous time.Duration multiplication
     - errcheck # unchecked errors
     - gci # ensures imports are organized
     - gosimple # simplify code
@@ -41,6 +42,7 @@ linters:
     - ineffassign # ineffectual assignments
     - loggercheck # check for even key/value pairs in logger calls
     - misspell # spelling
+    - reassign # make sure package variables not reassigned
     - unused # unused constants, variables, functions, types
     - usestdlibvars # using variables/constants from the standard library
   disable:
