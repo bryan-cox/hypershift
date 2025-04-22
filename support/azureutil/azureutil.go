@@ -3,6 +3,7 @@ package azureutil
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -17,6 +18,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 )
+
+type AzureEncryptionKey struct {
+	KeyVaultName string
+	KeyName      string
+	KeyVersion   string
+}
 
 // GetSubnetNameFromSubnetID extracts the subnet name from a subnet ID
 // Example subnet ID: /subscriptions/<subscriptionID>/resourceGroups/<resourceGroupName>/providers/Microsoft.Network/virtualNetworks/<vnetName>/subnets/<subnetName>
@@ -293,4 +300,24 @@ func GetKeyVaultDNSSuffixFromCloudType(cloud string) (string, error) {
 	default:
 		return "", fmt.Errorf("unknown cloud type %q", cloud)
 	}
+}
+
+// ParseAzureKMSKey parses an Azure key vault ID into a type where the key vault name, key name, and key version can be
+// expressed explicitly.
+func ParseAzureKMSKey(encryptionKeyID string) (*AzureEncryptionKey, error) {
+	parsedKeyId, err := url.Parse(encryptionKeyID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid encryption key identifier: %v", err)
+	}
+
+	key := strings.Split(strings.TrimPrefix(parsedKeyId.Path, "/keys/"), "/")
+	if len(key) != 2 {
+		return nil, fmt.Errorf("invalid encryption key identifier, couldn't retrieve key name and version: %v", err)
+	}
+
+	return &AzureEncryptionKey{
+		KeyVaultName: strings.Split(parsedKeyId.Hostname(), ".")[0],
+		KeyName:      key[0],
+		KeyVersion:   key[1],
+	}, nil
 }

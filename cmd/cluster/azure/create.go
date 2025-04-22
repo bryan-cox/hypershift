@@ -3,7 +3,6 @@ package azure
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"slices"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	azurenodepool "github.com/openshift/hypershift/cmd/nodepool/azure"
 	"github.com/openshift/hypershift/cmd/util"
 	"github.com/openshift/hypershift/cmd/version"
+	"github.com/openshift/hypershift/support/azureutil"
 	"github.com/openshift/hypershift/support/releaseinfo"
 
 	corev1 "k8s.io/api/core/v1"
@@ -101,12 +101,6 @@ type RawCreateOptions struct {
 	NodePoolOpts *azurenodepool.RawAzurePlatformCreateOptions
 }
 
-type AzureEncryptionKey struct {
-	KeyVaultName string
-	KeyName      string
-	KeyVersion   string
-}
-
 // validatedCreateOptions is a private wrapper that enforces a call of Validate() before Complete() can be invoked.
 type validatedCreateOptions struct {
 	*RawCreateOptions
@@ -160,7 +154,7 @@ type completedCreateOptions struct {
 	name, namespace   string
 
 	infra         *azureinfra.CreateInfraOutput
-	encryptionKey *AzureEncryptionKey
+	encryptionKey *azureutil.AzureEncryptionKey
 	creds         util.AzureCreds
 }
 
@@ -199,20 +193,10 @@ func (o *ValidatedCreateOptions) Complete(ctx context.Context, opts *core.Create
 	}
 
 	if o.EncryptionKeyID != "" {
-		parsedKeyId, err := url.Parse(o.EncryptionKeyID)
+		var err error
+		output.encryptionKey, err = azureutil.ParseAzureKMSKey(o.EncryptionKeyID)
 		if err != nil {
-			return nil, fmt.Errorf("invalid encryption key identifier: %v", err)
-		}
-
-		key := strings.Split(strings.TrimPrefix(parsedKeyId.Path, "/keys/"), "/")
-		if len(key) != 2 {
-			return nil, fmt.Errorf("invalid encryption key identifier, couldn't retrieve key name and version: %v", err)
-		}
-
-		output.encryptionKey = &AzureEncryptionKey{
-			KeyVaultName: strings.Split(parsedKeyId.Hostname(), ".")[0],
-			KeyName:      key[0],
-			KeyVersion:   key[1],
+			return nil, fmt.Errorf("failed to parse encryption key id: %w", err)
 		}
 	}
 

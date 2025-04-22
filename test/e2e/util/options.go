@@ -104,6 +104,8 @@ type ConfigurableClusterOptions struct {
 	AzureIssuerURL                        string
 	AzureServiceAccountTokenIssuerKeyPath string
 	AzureDataPlaneIdentities              string
+	AzureEncryptionKeyID                  string
+	AzureKMSUserAssignedCredsSecretName   string
 	OpenStackCredentialsFile              string
 	OpenStackCACertFile                   string
 	AzureLocation                         string
@@ -311,6 +313,8 @@ func (o *Options) DefaultAzureOptions() azure.RawCreateOptions {
 		IssuerURL:                        o.ConfigurableClusterOptions.AzureIssuerURL,
 		ServiceAccountTokenIssuerKeyPath: o.ConfigurableClusterOptions.AzureServiceAccountTokenIssuerKeyPath,
 		DataPlaneIdentitiesFile:          o.ConfigurableClusterOptions.AzureDataPlaneIdentities,
+		EncryptionKeyID:                  o.ConfigurableClusterOptions.AzureEncryptionKeyID,
+		KMSUserAssignedCredsSecretName:   o.ConfigurableClusterOptions.AzureKMSUserAssignedCredsSecretName,
 		DNSZoneRGName:                    "os4-common",
 		AssignServicePrincipalRoles:      true,
 

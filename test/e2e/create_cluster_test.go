@@ -15,6 +15,7 @@ import (
 	hyperv1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 	"github.com/openshift/hypershift/api/util/ipnet"
 	"github.com/openshift/hypershift/support/assets"
+	"github.com/openshift/hypershift/support/azureutil"
 	e2eutil "github.com/openshift/hypershift/test/e2e/util"
 	"github.com/openshift/hypershift/test/integration"
 	integrationframework "github.com/openshift/hypershift/test/integration/framework"
@@ -1326,8 +1327,8 @@ func TestCreateClusterRequestServingIsolation(t *testing.T) {
 }
 
 func TestCreateClusterCustomConfig(t *testing.T) {
-	if globalOpts.Platform != hyperv1.AWSPlatform {
-		t.Skip("test only supported on platform AWS")
+	if globalOpts.Platform != hyperv1.AWSPlatform && globalOpts.Platform != hyperv1.AzurePlatform {
+		t.Skip("test only supported on platforms AWS and Azure")
 	}
 	t.Parallel()
 
@@ -1336,48 +1337,67 @@ func TestCreateClusterCustomConfig(t *testing.T) {
 
 	clusterOpts := globalOpts.DefaultClusterOptions(t)
 
-	clusterOpts.BeforeApply = func(o crclient.Object) {
-		switch hc := o.(type) {
-		case *hyperv1.HostedCluster:
-			hc.Spec.Configuration = &hyperv1.ClusterConfiguration{
-				Image: &configv1.ImageSpec{
-					RegistrySources: configv1.RegistrySources{
-						BlockedRegistries: []string{"badregistry.io"},
+	if globalOpts.Platform == hyperv1.AWSPlatform {
+		clusterOpts.BeforeApply = func(o crclient.Object) {
+			switch hc := o.(type) {
+			case *hyperv1.HostedCluster:
+				hc.Spec.Configuration = &hyperv1.ClusterConfiguration{
+					Image: &configv1.ImageSpec{
+						RegistrySources: configv1.RegistrySources{
+							BlockedRegistries: []string{"badregistry.io"},
+						},
 					},
-				},
-			}
-			hc.Spec.Capabilities = &hyperv1.Capabilities{
-				Disabled: []hyperv1.OptionalCapability{
-					hyperv1.ImageRegistryCapability,
-				},
+				}
+				hc.Spec.Capabilities = &hyperv1.Capabilities{
+					Disabled: []hyperv1.OptionalCapability{
+						hyperv1.ImageRegistryCapability,
+					},
+				}
 			}
 		}
+
+		// find kms key ARN using alias
+		kmsKeyArn, err := e2eutil.GetKMSKeyArn(clusterOpts.AWSPlatform.Credentials.AWSCredentialsFile, clusterOpts.AWSPlatform.Region, globalOpts.ConfigurableClusterOptions.AWSKmsKeyAlias)
+		if err != nil || kmsKeyArn == nil {
+			t.Fatal("failed to retrieve kms key arn")
+		}
+
+		clusterOpts.AWSPlatform.EtcdKMSKeyARN = *kmsKeyArn
+
+		e2eutil.NewHypershiftTest(t, ctx, func(t *testing.T, g Gomega, mgtClient crclient.Client, hostedCluster *hyperv1.HostedCluster) {
+
+			g.Expect(hostedCluster.Spec.SecretEncryption.KMS.AWS.ActiveKey.ARN).To(Equal(*kmsKeyArn))
+			g.Expect(hostedCluster.Spec.SecretEncryption.KMS.AWS.Auth.AWSKMSRoleARN).ToNot(BeEmpty())
+
+			guestClient := e2eutil.WaitForGuestClient(t, testContext, mgtClient, hostedCluster)
+			e2eutil.EnsureSecretEncryptedUsingKMSV2(t, ctx, hostedCluster, guestClient)
+			// test oauth with identity provider
+			e2eutil.EnsureOAuthWithIdentityProvider(t, ctx, mgtClient, hostedCluster)
+
+			// ensure image registry component is disabled
+			e2eutil.EnsureImageRegistryCapabilityDisabled(ctx, t, g, mgtClient, hostedCluster)
+
+			// ensure KAS DNS name is configured with a KAS Serving cert
+			e2eutil.EnsureKubeAPIDNSNameCustomCert(t, ctx, mgtClient, hostedCluster)
+		}).Execute(&clusterOpts, globalOpts.Platform, globalOpts.ArtifactDir, "custom-config", globalOpts.ServiceAccountSigningKey)
 	}
+	if globalOpts.Platform == hyperv1.AzurePlatform {
+		// Get the Azure KMS Key
+		parsedEncryptionKey, err := azureutil.ParseAzureKMSKey(clusterOpts.AzurePlatform.EncryptionKeyID)
+		if err != nil {
+			t.Fatal("failed to parse azure kms key")
+		}
 
-	// find kms key ARN using alias
-	kmsKeyArn, err := e2eutil.GetKMSKeyArn(clusterOpts.AWSPlatform.Credentials.AWSCredentialsFile, clusterOpts.AWSPlatform.Region, globalOpts.ConfigurableClusterOptions.AWSKmsKeyAlias)
-	if err != nil || kmsKeyArn == nil {
-		t.Fatal("failed to retrieve kms key arn")
+		e2eutil.NewHypershiftTest(t, ctx, func(t *testing.T, g Gomega, mgtClient crclient.Client, hostedCluster *hyperv1.HostedCluster) {
+			// Ensure HC is created with the Azure KMS Key
+			g.Expect(hostedCluster.Spec.SecretEncryption.KMS.Azure.KMS.CredentialsSecretName).To(Equal(clusterOpts.AzurePlatform.KMSUserAssignedCredsSecretName))
+			g.Expect(hostedCluster.Spec.SecretEncryption.KMS.Azure.ActiveKey.KeyName).To(Equal(parsedEncryptionKey.KeyName))
+			g.Expect(hostedCluster.Spec.SecretEncryption.KMS.Azure.ActiveKey.KeyVaultName).To(Equal(parsedEncryptionKey.KeyVaultName))
+
+			guestClient := e2eutil.WaitForGuestClient(t, testContext, mgtClient, hostedCluster)
+			e2eutil.EnsureSecretEncryptedUsingKMSV2(t, ctx, hostedCluster, guestClient)
+		}).Execute(&clusterOpts, globalOpts.Platform, globalOpts.ArtifactDir, "custom-config", globalOpts.ServiceAccountSigningKey)
 	}
-
-	clusterOpts.AWSPlatform.EtcdKMSKeyARN = *kmsKeyArn
-
-	e2eutil.NewHypershiftTest(t, ctx, func(t *testing.T, g Gomega, mgtClient crclient.Client, hostedCluster *hyperv1.HostedCluster) {
-
-		g.Expect(hostedCluster.Spec.SecretEncryption.KMS.AWS.ActiveKey.ARN).To(Equal(*kmsKeyArn))
-		g.Expect(hostedCluster.Spec.SecretEncryption.KMS.AWS.Auth.AWSKMSRoleARN).ToNot(BeEmpty())
-
-		guestClient := e2eutil.WaitForGuestClient(t, testContext, mgtClient, hostedCluster)
-		e2eutil.EnsureSecretEncryptedUsingKMSV2(t, ctx, hostedCluster, guestClient)
-		// test oauth with identity provider
-		e2eutil.EnsureOAuthWithIdentityProvider(t, ctx, mgtClient, hostedCluster)
-
-		// ensure image registry component is disabled
-		e2eutil.EnsureImageRegistryCapabilityDisabled(ctx, t, g, mgtClient, hostedCluster)
-
-		// ensure KAS DNS name is configured with a KAS Serving cert
-		e2eutil.EnsureKubeAPIDNSNameCustomCert(t, ctx, mgtClient, hostedCluster)
-	}).Execute(&clusterOpts, globalOpts.Platform, globalOpts.ArtifactDir, "custom-config", globalOpts.ServiceAccountSigningKey)
 }
 
 func TestCreateClusterCustomConfigV2(t *testing.T) {

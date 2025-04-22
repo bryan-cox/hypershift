@@ -267,3 +267,42 @@ func TestCreateVolumeForAzureSecretStoreProviderClass(t *testing.T) {
 		})
 	}
 }
+
+func TestParseAzureKMSKey(t *testing.T) {
+	tests := []struct {
+		name                       string
+		encryptionKeyID            string
+		expectedAzureEncryptionKey *AzureEncryptionKey
+		expectError                bool
+	}{
+		{
+
+			name:            "valid encryption key id",
+			encryptionKeyID: "https://test.vault.azure.net/keys/test-key/123456",
+			expectedAzureEncryptionKey: &AzureEncryptionKey{
+				KeyVaultName: "test",
+				KeyName:      "test-key",
+				KeyVersion:   "123456",
+			},
+			expectError: false,
+		},
+		{
+			name:                       "invalid encryption key id",
+			encryptionKeyID:            "test/keys/test-key/123456",
+			expectedAzureEncryptionKey: nil,
+			expectError:                true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+			parsedID, err := ParseAzureKMSKey(tt.encryptionKeyID)
+			g.Expect(parsedID).To(Equal(tt.expectedAzureEncryptionKey))
+			if tt.expectError {
+				g.Expect(err).To(HaveOccurred())
+			} else {
+				g.Expect(err).To(BeNil())
+			}
+		})
+	}
+}
