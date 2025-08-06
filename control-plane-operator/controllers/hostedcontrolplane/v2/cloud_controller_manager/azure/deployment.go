@@ -10,6 +10,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -33,5 +34,18 @@ func adaptDeployment(cpContext component.WorkloadContext, deployment *appsv1.Dep
 			azureutil.CreateVolumeForAzureSecretStoreProviderClass(config.ManagedAzureCloudProviderSecretStoreVolumeName, config.ManagedAzureCloudProviderSecretProviderClassName),
 		)
 	}
+
+	// For self-managed Azure, ensure the cloud-config volume uses the secret instead of configmap
+	if !azureutil.IsAroHCP() {
+		util.UpdateVolume("cloud-config", deployment.Spec.Template.Spec.Volumes, func(v *corev1.Volume) {
+			// Ensure cloud-config volume references the secret, not configmap
+			v.Secret = &corev1.SecretVolumeSource{
+				SecretName:  "azure-cloud-config",
+				DefaultMode: ptr.To[int32](416),
+			}
+			v.ConfigMap = nil
+		})
+	}
+
 	return nil
 }
