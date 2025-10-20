@@ -123,6 +123,7 @@ func TestMain(m *testing.M) {
 	flag.StringVar(&globalOpts.ConfigurableClusterOptions.AzureCredentialsFile, "e2e.azure-credentials-file", "", "Path to an Azure credentials file")
 	flag.StringVar(&globalOpts.ConfigurableClusterOptions.AzureLocation, "e2e.azure-location", "eastus", "The location to use for Azure")
 	flag.StringVar(&globalOpts.ConfigurableClusterOptions.AzureManagedIdentitiesFile, "e2e.azure-managed-identities-file", "", "Path to an Azure managed identities file")
+	flag.StringVar(&globalOpts.ConfigurableClusterOptions.AzureWorkloadIdentitiesFile, "e2e.azure-workload-identities-file", "", "Path to an Azure workload identities file for self-managed infrastructure")
 	flag.StringVar(&globalOpts.ConfigurableClusterOptions.AzureMarketplaceOffer, "e2e.azure-marketplace-offer", "", "The location to use for Azure")
 	flag.StringVar(&globalOpts.ConfigurableClusterOptions.AzureMarketplacePublisher, "e2e.azure-marketplace-publisher", "", "The marketplace publisher to use for Azure")
 	flag.StringVar(&globalOpts.ConfigurableClusterOptions.AzureMarketplaceSKU, "e2e.azure-marketplace-sku", "", "The marketplace SKU to use for Azure")
