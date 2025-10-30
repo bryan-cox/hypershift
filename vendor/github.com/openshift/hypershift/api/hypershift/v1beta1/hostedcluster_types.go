@@ -607,7 +607,8 @@ type HostedClusterSpec struct {
 	// TODO(alberto): have our own local reference type to include our opinions and avoid transparent changes.
 	PullSecret corev1.LocalObjectReference `json:"pullSecret"`
 
-	// sshKey is a local reference to a Secret that must have a "id_rsa.pub" key whose content must be the public part of 1..N SSH keys.
+	// sshKey is a local reference to a Secret that must contain a public SSH key (a key ending with '.pub', e.g., 'id_rsa.pub', 'id_ecdsa.pub', 'id_ed25519.pub').
+	// The content must be the public part of 1..N SSH keys.
 	// If the reference is set but none of the above requirements are met, the HostedCluster will enter a degraded state.
 	// TODO(alberto): Signal this in a condition.
 	// When sshKey is set, the controllers will generate a machineConfig with the sshAuthorizedKeys https://coreos.github.io/ignition/configuration-v3_2/ populated with this value.
