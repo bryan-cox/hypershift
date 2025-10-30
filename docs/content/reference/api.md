@@ -456,7 +456,8 @@ Kubernetes core/v1.LocalObjectReference
 </td>
 <td>
 <em>(Optional)</em>
-<p>sshKey is a local reference to a Secret that must have a &ldquo;id_rsa.pub&rdquo; key whose content must be the public part of 1..N SSH keys.
+<p>sshKey is a local reference to a Secret that must contain a public SSH key (a key ending with &lsquo;.pub&rsquo;, e.g., &lsquo;id_rsa.pub&rsquo;, &lsquo;id_ecdsa.pub&rsquo;, &lsquo;id_ed25519.pub&rsquo;).
+The content must be the public part of 1..N SSH keys.
 If the reference is set but none of the above requirements are met, the HostedCluster will enter a degraded state.
 TODO(alberto): Signal this in a condition.
 When sshKey is set, the controllers will generate a machineConfig with the sshAuthorizedKeys <a href="https://coreos.github.io/ignition/configuration-v3_2/">https://coreos.github.io/ignition/configuration-v3_2/</a> populated with this value.
@@ -6037,7 +6038,8 @@ Kubernetes core/v1.LocalObjectReference
 </td>
 <td>
 <em>(Optional)</em>
-<p>sshKey is a local reference to a Secret that must have a &ldquo;id_rsa.pub&rdquo; key whose content must be the public part of 1..N SSH keys.
+<p>sshKey is a local reference to a Secret that must contain a public SSH key (a key ending with &lsquo;.pub&rsquo;, e.g., &lsquo;id_rsa.pub&rsquo;, &lsquo;id_ecdsa.pub&rsquo;, &lsquo;id_ed25519.pub&rsquo;).
+The content must be the public part of 1..N SSH keys.
 If the reference is set but none of the above requirements are met, the HostedCluster will enter a degraded state.
 TODO(alberto): Signal this in a condition.
 When sshKey is set, the controllers will generate a machineConfig with the sshAuthorizedKeys <a href="https://coreos.github.io/ignition/configuration-v3_2/">https://coreos.github.io/ignition/configuration-v3_2/</a> populated with this value.
