@@ -1577,15 +1577,15 @@ func (r *HostedClusterReconciler) reconcile(ctx context.Context, req ctrl.Reques
 		}
 		dest := controlplaneoperator.SSHKey(controlPlaneNamespace.Name)
 		_, err = createOrUpdate(ctx, r.Client, dest, func() error {
-			srcData, srcHasData := src.Data["id_rsa.pub"]
-			if !srcHasData {
-				return fmt.Errorf("hostedcluster SSHKey secret %q must have a id_rsa.pub key", src.Name)
+			keyName, srcData, err := hyperutil.ExtractSSHPublicKey(&src)
+			if err != nil {
+				return err
 			}
 			dest.Type = corev1.SecretTypeOpaque
 			if dest.Data == nil {
 				dest.Data = map[string][]byte{}
 			}
-			dest.Data["id_rsa.pub"] = srcData
+			dest.Data[keyName] = srcData
 			return nil
 		})
 		if err != nil {

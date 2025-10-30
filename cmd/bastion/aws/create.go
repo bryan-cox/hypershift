@@ -11,6 +11,7 @@ import (
 	awsutil "github.com/openshift/hypershift/cmd/infra/aws/util"
 	"github.com/openshift/hypershift/cmd/log"
 	"github.com/openshift/hypershift/cmd/util"
+	supportutil "github.com/openshift/hypershift/support/util"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -131,7 +132,11 @@ func (o *CreateBastionOpts) Run(ctx context.Context, logger logr.Logger) (string
 			if err := c.Get(ctx, types.NamespacedName{Name: hostedCluster.Spec.SSHKey.Name, Namespace: o.Namespace}, sshKeySecret); err != nil {
 				return "", "", fmt.Errorf("cannot get secret with SSH key (%s/%s): %w", o.Namespace, hostedCluster.Spec.SSHKey.Name, err)
 			}
-			sshPublicKey = sshKeySecret.Data["id_rsa.pub"]
+			_, data, err := supportutil.ExtractSSHPublicKey(sshKeySecret)
+			if err != nil {
+				return "", "", err
+			}
+			sshPublicKey = data
 		}
 	} else {
 		infraID = o.InfraID
