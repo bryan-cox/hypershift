@@ -500,3 +500,215 @@ func TestRetrieveSupportedOCPVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestIsMultiArchStream(t *testing.T) {
+	testCases := []struct {
+		name           string
+		releaseStream  string
+		expectedResult bool
+	}{
+		{
+			name:           "When stream ends with -multi, it should be identified as multi-arch",
+			releaseStream:  "4-stable-multi",
+			expectedResult: true,
+		},
+		{
+			name:           "When stream ends with -multi (different version), it should be identified as multi-arch",
+			releaseStream:  "4.19-stable-multi",
+			expectedResult: true,
+		},
+		{
+			name:           "When stream does not end with -multi, it should not be identified as multi-arch",
+			releaseStream:  "4-stable",
+			expectedResult: false,
+		},
+		{
+			name:           "When stream is 4-dev-preview, it should not be identified as multi-arch",
+			releaseStream:  "4-dev-preview",
+			expectedResult: false,
+		},
+		{
+			name:           "When stream is empty, it should not be identified as multi-arch",
+			releaseStream:  "",
+			expectedResult: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+			result := isMultiArchStream(tc.releaseStream)
+			g.Expect(result).To(Equal(tc.expectedResult))
+		})
+	}
+}
+
+func TestRetrieveSupportedOCPVersionWithRCFiltering(t *testing.T) {
+	supportedVersionsCM := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "supported-versions",
+			Namespace: "test",
+			Labels:    map[string]string{"hypershift.openshift.io/supported-versions": "true"},
+		},
+		Data: map[string]string{
+			"server-version":     "test-server",
+			"supported-versions": `{"versions":["4.19", "4.18", "4.17", "4.16", "4.15", "4.14"]}`,
+		},
+	}
+
+	// Mock HTTP server that returns release tags with RC versions
+	mockServerWithRC := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Simulate the scenario from JIRA where RC versions appear before GA versions
+		response := `{
+			"name": "4-stable-multi",
+			"tags": [
+				{
+					"name": "4.20.0-rc.3",
+					"pullSpec": "quay.io/openshift-release-dev/ocp-release:4.20.0-rc.3-multi",
+					"downloadURL": "https://example.com/4.20.0-rc.3"
+				},
+				{
+					"name": "4.19.5",
+					"pullSpec": "quay.io/openshift-release-dev/ocp-release:4.19.5-multi",
+					"downloadURL": "https://example.com/4.19.5"
+				},
+				{
+					"name": "4.19.0",
+					"pullSpec": "quay.io/openshift-release-dev/ocp-release:4.19.0-multi",
+					"downloadURL": "https://example.com/4.19.0"
+				},
+				{
+					"name": "4.18.8",
+					"pullSpec": "quay.io/openshift-release-dev/ocp-release:4.18.8-multi",
+					"downloadURL": "https://example.com/4.18.8"
+				}
+			]
+		}`
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(response))
+		if err != nil {
+			t.Fatalf("failed to write response: %v", err)
+		}
+	}))
+	defer mockServerWithRC.Close()
+
+	// Mock HTTP server that returns single version with RC
+	mockServerSingleRC := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := `{
+			"name": "4.20.0-rc.5",
+			"pullSpec": "quay.io/openshift-release-dev/ocp-release:4.20.0-rc.5",
+			"downloadURL": "https://example.com/4.20.0-rc.5"
+		}`
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(response))
+		if err != nil {
+			t.Fatalf("failed to write response: %v", err)
+		}
+	}))
+	defer mockServerSingleRC.Close()
+
+	// Mock HTTP server that returns single version without RC
+	mockServerSingleGA := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := `{
+			"name": "4.19.5",
+			"pullSpec": "quay.io/openshift-release-dev/ocp-release:4.19.5",
+			"downloadURL": "https://example.com/4.19.5"
+		}`
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(response))
+		if err != nil {
+			t.Fatalf("failed to write response: %v", err)
+		}
+	}))
+	defer mockServerSingleGA.Close()
+
+	// Mock HTTP server that returns single version not supported
+	mockServerUnsupported := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := `{
+			"name": "4.20.5",
+			"pullSpec": "quay.io/openshift-release-dev/ocp-release:4.20.5",
+			"downloadURL": "https://example.com/4.20.5"
+		}`
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte(response))
+		if err != nil {
+			t.Fatalf("failed to write response: %v", err)
+		}
+	}))
+	defer mockServerUnsupported.Close()
+
+	testCases := []struct {
+		name               string
+		cm                 *corev1.ConfigMap
+		releaseURL         string
+		expectErr          bool
+		expectedErrMsg     string
+		expectedOCPVersion ocpVersion
+	}{
+		{
+			name:       "When latest releases include RC versions, expect latest non-RC supported version (/tags endpoint)",
+			cm:         supportedVersionsCM,
+			releaseURL: mockServerWithRC.URL,
+			expectErr:  false,
+			expectedOCPVersion: ocpVersion{
+				Name:     "4.19.5",
+				PullSpec: "quay.io/openshift-release-dev/ocp-release:4.19.5-multi",
+			},
+		},
+		{
+			name:           "When single version is RC, expect error (/latest endpoint)",
+			cm:             supportedVersionsCM,
+			releaseURL:     mockServerSingleRC.URL,
+			expectErr:      true,
+			expectedErrMsg: "is a release candidate",
+		},
+		{
+			name:       "When single version is GA and supported, expect success (/latest endpoint)",
+			cm:         supportedVersionsCM,
+			releaseURL: mockServerSingleGA.URL,
+			expectErr:  false,
+			expectedOCPVersion: ocpVersion{
+				Name:     "4.19.5",
+				PullSpec: "quay.io/openshift-release-dev/ocp-release:4.19.5",
+			},
+		},
+		{
+			name:           "When single version is not supported by HO, expect error",
+			cm:             supportedVersionsCM,
+			releaseURL:     mockServerUnsupported.URL,
+			expectErr:      true,
+			expectedErrMsg: "is not supported by this HyperShift Operator",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+
+			scheme := api.Scheme
+			g.Expect(corev1.AddToScheme(scheme)).To(Succeed())
+			var fakeClient client.Client
+			if tc.cm != nil {
+				fakeClient = fake.NewClientBuilder().WithScheme(scheme).WithObjects(tc.cm).Build()
+			} else {
+				fakeClient = fake.NewClientBuilder().WithScheme(scheme).Build()
+			}
+
+			version, err := retrieveSupportedOCPVersion(t.Context(), tc.releaseURL, fakeClient)
+			if tc.expectErr {
+				g.Expect(err).To(HaveOccurred())
+				if tc.expectedErrMsg != "" {
+					g.Expect(err.Error()).To(ContainSubstring(tc.expectedErrMsg))
+				}
+			} else {
+				g.Expect(err).ToNot(HaveOccurred())
+				g.Expect(version.Name).To(Equal(tc.expectedOCPVersion.Name))
+				g.Expect(version.PullSpec).To(Equal(tc.expectedOCPVersion.PullSpec))
+			}
+		})
+	}
+}

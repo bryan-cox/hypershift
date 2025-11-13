@@ -164,6 +164,18 @@ func getOCPVersion(releaseURL string) (ocpVersion, error) {
 	return version, nil
 }
 
+// LookupDefaultOCPVersion retrieves the default OCP version from release streams.
+// It supports two modes of operation:
+//
+//  1. When releaseStream is empty: Uses the default release stream (4-stable-multi) and looks up supported OCP versions
+//     from the HyperShift operator's ConfigMap to find the latest supported version that is not a release candidate.
+//
+//  2. When releaseStream is provided: Uses the specified release stream. Multi-arch streams (ending in "-multi")
+//     use the multi-arch endpoint, while single-arch streams use the amd64 endpoint. In both cases, the function
+//     validates the version against the supported-versions ConfigMap and filters out release candidates.
+//
+// This ensures compatibility with the currently installed HyperShift operator version and prevents the use of
+// unsupported release candidate versions.
 func LookupDefaultOCPVersion(ctx context.Context, releaseStream string, client crclient.Client) (ocpVersion, error) {
 	var (
 		version    ocpVersion
@@ -172,14 +184,20 @@ func LookupDefaultOCPVersion(ctx context.Context, releaseStream string, client c
 	)
 
 	if len(releaseStream) == 0 {
-		// No release stream was provided, so we will look up the supported OCP versions from the HO and use the latest
-		// release image from the multi-arch release stream that is not a release candidate.
+		// No release stream was provided, use default multi-arch stream
 		releaseURL = fmt.Sprintf(multiArchReleaseURLTemplate, config.DefaultReleaseStream)
 		version, err = retrieveSupportedOCPVersion(ctx, releaseURL, client)
 	} else {
-		// We look up the release URL based on the user provided release stream.
-		releaseURL = fmt.Sprintf(releaseURLTemplate, releaseStream)
-		version, err = getOCPVersion(releaseURL)
+		// User provided a release stream - determine if it's multi-arch or single-arch
+		if isMultiArchStream(releaseStream) {
+			// Multi-arch streams use the /tags endpoint
+			releaseURL = fmt.Sprintf(multiArchReleaseURLTemplate, releaseStream)
+		} else {
+			// Single-arch streams use the /latest endpoint
+			releaseURL = fmt.Sprintf(releaseURLTemplate, releaseStream)
+		}
+		// Use retrieveSupportedOCPVersion for both to get RC filtering and version validation
+		version, err = retrieveSupportedOCPVersion(ctx, releaseURL, client)
 	}
 
 	if err != nil {
@@ -187,6 +205,12 @@ func LookupDefaultOCPVersion(ctx context.Context, releaseStream string, client c
 	}
 
 	return version, nil
+}
+
+// isMultiArchStream returns true if the release stream is known to be multi-arch.
+// Multi-arch streams are identified by the "-multi" suffix in their name.
+func isMultiArchStream(releaseStream string) bool {
+	return strings.HasSuffix(releaseStream, "-multi")
 }
 
 // LookupLatestSupportedRelease picks the latest multi-arch image supported by this Hypershift Operator
@@ -292,12 +316,18 @@ type ocpTags struct {
 	Tags []ocpVersion `json:"tags"`
 }
 
-// retrieveSupportedOCPVersion retrieves the latest supported OCP version from supported versions ConfigMap, retrieves
-// the latest stable release images from the provided release URL, and returns the latest supported OCP version that is
-// not a release candidate and matches the latest supported OCP version supported by the HyperShift operator.
+// retrieveSupportedOCPVersion retrieves the latest supported OCP version from the supported-versions ConfigMap,
+// fetches release information from the provided release URL, and returns the latest supported OCP version that is
+// not a release candidate and is compatible with the currently installed HyperShift operator.
+//
+// The releaseURL can point to either:
+// - A /tags endpoint (returns list of tags) - used for multi-arch streams
+// - A /latest endpoint (returns single latest version) - used for single-arch streams
+//
+// In both cases, the function filters out release candidates and validates the version against the
+// supported-versions ConfigMap.
 func retrieveSupportedOCPVersion(ctx context.Context, releaseURL string, client crclient.Client) (ocpVersion, error) {
 	var supportedVersions *corev1.ConfigMap
-	var stableOCPVersions ocpTags
 	var namespace string
 
 	// Find the supported versions ConfigMap since it may be in a different namespace than the default "hypershift"
@@ -327,7 +357,7 @@ func retrieveSupportedOCPVersion(ctx context.Context, releaseURL string, client 
 		return ocpVersion{}, fmt.Errorf("no supported OCP versions found in the ConfigMap")
 	}
 
-	// Grab the latest stable release images
+	// Fetch the release information from the URL
 	resp, err := http.Get(releaseURL)
 	if err != nil {
 		return ocpVersion{}, err
@@ -337,22 +367,50 @@ func retrieveSupportedOCPVersion(ctx context.Context, releaseURL string, client 
 	if err != nil {
 		return ocpVersion{}, err
 	}
-	err = json.Unmarshal(body, &stableOCPVersions)
-	if err != nil {
-		return ocpVersion{}, err
+
+	// Try to parse as tags response first (multi-arch /tags endpoint)
+	var stableOCPVersions ocpTags
+	if err := json.Unmarshal(body, &stableOCPVersions); err == nil && len(stableOCPVersions.Tags) > 0 {
+		// Successfully parsed as tags - find latest supported non-RC version
+		return findLatestSupportedVersion(supportedOCPVersions.Versions, stableOCPVersions.Tags, releaseURL)
 	}
 
-	// Find the latest supported OCP version that is not a release candidate and matches the latest supported OCP
-	// version supported by the HyperShift operator.
-	for _, version := range supportedOCPVersions.Versions {
-		for _, ocpVersion := range stableOCPVersions.Tags {
-			if strings.Contains(ocpVersion.Name, "rc") {
+	// Try to parse as single version response (amd64 /latest endpoint)
+	var singleVersion ocpVersion
+	if err := json.Unmarshal(body, &singleVersion); err == nil && singleVersion.Name != "" {
+		// Got a single version - check if it's supported and not RC
+		if strings.Contains(singleVersion.Name, "rc") {
+			return ocpVersion{}, fmt.Errorf("the latest version in stream is a release candidate (%s), which is not supported by this HyperShift Operator", singleVersion.Name)
+		}
+
+		// Check if this version is in our supported list
+		for _, supportedVer := range supportedOCPVersions.Versions {
+			if strings.Contains(singleVersion.Name, supportedVer) {
+				return singleVersion, nil
+			}
+		}
+
+		return ocpVersion{}, fmt.Errorf("version %s from release stream is not supported by this HyperShift Operator (supported: %v)",
+			singleVersion.Name, supportedOCPVersions.Versions)
+	}
+
+	return ocpVersion{}, fmt.Errorf("failed to parse response from release URL %s", releaseURL)
+}
+
+// findLatestSupportedVersion finds the latest version from a list of tags that is both supported by the
+// HyperShift operator and not a release candidate. It iterates through the supported versions (which are
+// already ordered from latest to oldest) and returns the first matching non-RC version found.
+func findLatestSupportedVersion(supportedVersions []string, tags []ocpVersion, releaseURL string) (ocpVersion, error) {
+	// Iterate through supported versions (already in order from latest to oldest)
+	for _, version := range supportedVersions {
+		for _, tag := range tags {
+			if strings.Contains(tag.Name, "rc") {
 				// Skip release candidates
 				continue
 			}
-			if strings.Contains(ocpVersion.Name, version) {
+			if strings.Contains(tag.Name, version) {
 				// We found the latest supported OCP version
-				return ocpVersion, nil
+				return tag, nil
 			}
 		}
 	}
