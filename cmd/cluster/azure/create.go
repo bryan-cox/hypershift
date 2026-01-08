@@ -87,7 +87,7 @@ func bindCoreOptions(opts *RawCreateOptions, flags *pflag.FlagSet) {
 	flags.StringVar(&opts.WorkloadIdentitiesFile, "workload-identities-file", opts.WorkloadIdentitiesFile, "Path to a file containing the workload identity client IDs configuration in json format for self-managed Azure.")
 
 	// flags used for both ARO HCP and self-managed Azure
-	// In ARO HCP, it assigns roles to managed identities; in self-managed Azure, it assigns roles to workload identities. The self-managed HCP CLI version of this flage is named assign-identity-roles.
+	// In ARO HCP, it assigns roles to managed identities; in self-managed Azure, it assigns roles to workload identities. The self-managed HCP CLI version of this flag is named assign-identity-roles.
 	flags.BoolVar(&opts.AssignServicePrincipalRoles, "assign-service-principal-roles", opts.AssignServicePrincipalRoles, "Assign required Azure RBAC roles to identities (managed identities for ARO HCP, workload identities for self-managed).")
 
 	// general flags used for both managed and self-managed Azure
