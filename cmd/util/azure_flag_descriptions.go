@@ -54,4 +54,13 @@ const (
 
 	// Destroy options
 	PreserveResourceGroupDescription = "Keep the resource group after cluster deletion. Only cluster-specific resources within the group will be removed."
+
+	// Infrastructure command specific flags
+	AssignCustomHCPRolesDescription         = "Use custom Azure HCP role definitions instead of the default Contributor role for workload identities."
+	DisableClusterCapabilitiesDescription   = "Comma-separated list of cluster capabilities to disable (e.g. ImageRegistry). Disabled capabilities will not have corresponding workload identities created."
+	InfraIDDescription                      = "Unique identifier used to name and tag Azure resources. This ID will be incorporated into resource names and Azure tags."
+	BaseDomainInfraDescription              = "Base DNS domain for the cluster (e.g. example.com). A public DNS zone for this domain must exist in your Azure subscription."
+	InfraOutputFileDescription              = "Path to file where the infrastructure output will be saved in YAML format. Contains resource IDs and other information needed for cluster creation."
+	GenerateManagedIdentitiesDescription    = "Generate workload identities and save them to a JSON file instead of creating full infrastructure. Requires --oidc-issuer-url and --workload-identities-output-file."
+	WorkloadIdentitiesOutputFileDescription = "Path where generated workload identities JSON will be saved when using --generate-managed-identities."
 )
