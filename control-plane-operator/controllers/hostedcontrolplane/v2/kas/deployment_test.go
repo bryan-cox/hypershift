@@ -6,8 +6,165 @@ import (
 
 	. "github.com/onsi/gomega"
 
+	hyperv1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
+
 	corev1 "k8s.io/api/core/v1"
 )
+
+func TestApplyAzureWorkloadIdentityWebhookContainer(t *testing.T) {
+	const webhookContainerName = "azure-workload-identity-webhook"
+
+	testCases := []struct {
+		name            string
+		platform        hyperv1.PlatformType
+		azureSpec       *hyperv1.AzurePlatformSpec
+		expectContainer bool
+	}{
+		{
+			name:     "When platform is Azure it should include webhook container",
+			platform: hyperv1.AzurePlatform,
+			azureSpec: &hyperv1.AzurePlatformSpec{
+				Cloud:    "AzurePublicCloud",
+				TenantID: "test-tenant-id",
+			},
+			expectContainer: true,
+		},
+		{
+			name:            "When platform is AWS it should not include Azure webhook container",
+			platform:        hyperv1.AWSPlatform,
+			expectContainer: false,
+		},
+		{
+			name:            "When platform is IBMCloud it should not include Azure webhook container",
+			platform:        hyperv1.IBMCloudPlatform,
+			expectContainer: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			hcp := &hyperv1.HostedControlPlane{
+				Spec: hyperv1.HostedControlPlaneSpec{
+					Platform: hyperv1.PlatformSpec{
+						Type: tc.platform,
+					},
+				},
+			}
+			if tc.azureSpec != nil {
+				hcp.Spec.Platform.Azure = tc.azureSpec
+			}
+
+			podSpec := &corev1.PodSpec{}
+
+			if tc.platform == hyperv1.AzurePlatform {
+				applyAzureWorkloadIdentityWebhookContainer(podSpec, hcp)
+			}
+
+			var found bool
+			for _, c := range podSpec.Containers {
+				if c.Name == webhookContainerName {
+					found = true
+					break
+				}
+			}
+
+			if tc.expectContainer {
+				g.Expect(found).To(BeTrue(),
+					"expected azure-workload-identity-webhook container to be present for platform %s", tc.platform)
+
+				var servingCertVolumeFound, kubeconfigVolumeFound bool
+				for _, v := range podSpec.Volumes {
+					if v.Name == azureWorkloadIdentityWebhookServingCertVolumeName {
+						servingCertVolumeFound = true
+					}
+					if v.Name == azureWorkloadIdentityWebhookKubeconfigVolumeName {
+						kubeconfigVolumeFound = true
+					}
+				}
+				g.Expect(servingCertVolumeFound).To(BeTrue(), "expected serving cert volume to be present")
+				g.Expect(kubeconfigVolumeFound).To(BeTrue(), "expected kubeconfig volume to be present")
+			} else {
+				g.Expect(found).To(BeFalse(),
+					"expected azure-workload-identity-webhook container to be absent for platform %s", tc.platform)
+			}
+		})
+	}
+}
+
+func TestApplyAzureWorkloadIdentityWebhookEnvVars(t *testing.T) {
+	const webhookContainerName = "azure-workload-identity-webhook"
+
+	testCases := []struct {
+		name                     string
+		tenantID                 string
+		cloud                    string
+		expectedTenantID         string
+		expectedAzureEnvironment string
+	}{
+		{
+			name:                     "When HCP has specific TenantID and Cloud it should populate env vars accordingly",
+			tenantID:                 "my-tenant-id-123",
+			cloud:                    "AzureUSGovernmentCloud",
+			expectedTenantID:         "my-tenant-id-123",
+			expectedAzureEnvironment: "AzureUSGovernmentCloud",
+		},
+		{
+			name:                     "When Cloud is empty it should default to AzurePublicCloud",
+			tenantID:                 "another-tenant-id",
+			cloud:                    "",
+			expectedTenantID:         "another-tenant-id",
+			expectedAzureEnvironment: "AzurePublicCloud",
+		},
+		{
+			name:                     "When Cloud is AzureChinaCloud it should use AzureChinaCloud",
+			tenantID:                 "china-tenant-id",
+			cloud:                    "AzureChinaCloud",
+			expectedTenantID:         "china-tenant-id",
+			expectedAzureEnvironment: "AzureChinaCloud",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			hcp := &hyperv1.HostedControlPlane{
+				Spec: hyperv1.HostedControlPlaneSpec{
+					Platform: hyperv1.PlatformSpec{
+						Type: hyperv1.AzurePlatform,
+						Azure: &hyperv1.AzurePlatformSpec{
+							Cloud:    tc.cloud,
+							TenantID: tc.tenantID,
+						},
+					},
+				},
+			}
+
+			podSpec := &corev1.PodSpec{}
+			applyAzureWorkloadIdentityWebhookContainer(podSpec, hcp)
+
+			var webhookContainer *corev1.Container
+			for i := range podSpec.Containers {
+				if podSpec.Containers[i].Name == webhookContainerName {
+					webhookContainer = &podSpec.Containers[i]
+					break
+				}
+			}
+			g.Expect(webhookContainer).ToNot(BeNil(), "expected azure-workload-identity-webhook container to exist")
+
+			envVars := make(map[string]string)
+			for _, env := range webhookContainer.Env {
+				envVars[env.Name] = env.Value
+			}
+
+			g.Expect(envVars).To(HaveKeyWithValue("AZURE_TENANT_ID", tc.expectedTenantID))
+			g.Expect(envVars).To(HaveKeyWithValue("AZURE_ENVIRONMENT", tc.expectedAzureEnvironment))
+			g.Expect(envVars).To(HaveKeyWithValue("KUBECONFIG", "/var/run/app/kubeconfig/kubeconfig"))
+		})
+	}
+}
 
 func TestAddImagePrePullInitContainers(t *testing.T) {
 	testCases := []struct {
