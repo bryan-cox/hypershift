@@ -30,6 +30,9 @@ const (
 
 	awsPodIdentityWebhookServingCertVolumeName = "aws-pod-identity-webhook-serving-certs"
 	awsPodIdentityWebhookKubeconfigVolumeName  = "aws-pod-identity-webhook-kubeconfig"
+
+	azureWorkloadIdentityWebhookServingCertVolumeName = "azure-wi-webhook-serving-certs"
+	azureWorkloadIdentityWebhookKubeconfigVolumeName  = "azure-wi-webhook-kubeconfig"
 )
 
 func adaptDeployment(cpContext component.WorkloadContext, deployment *appsv1.Deployment) error {
@@ -88,6 +91,8 @@ func adaptDeployment(cpContext component.WorkloadContext, deployment *appsv1.Dep
 	switch hcp.Spec.Platform.Type {
 	case hyperv1.AWSPlatform:
 		applyAWSPodIdentityWebhookContainer(&deployment.Spec.Template.Spec, hcp)
+	case hyperv1.AzurePlatform:
+		applyAzureWorkloadIdentityWebhookContainer(&deployment.Spec.Template.Spec, hcp)
 	}
 
 	if hcp.Spec.AuditWebhook != nil && len(hcp.Spec.AuditWebhook.Name) > 0 {
@@ -285,6 +290,68 @@ func applyAWSPodIdentityWebhookContainer(podSpec *corev1.PodSpec, hcp *hyperv1.H
 			Name: awsPodIdentityWebhookKubeconfigVolumeName,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{SecretName: manifests.AWSPodIdentityWebhookKubeconfig("").Name},
+			},
+		},
+	)
+}
+
+func applyAzureWorkloadIdentityWebhookContainer(podSpec *corev1.PodSpec, hcp *hyperv1.HostedControlPlane) {
+	azureEnvironment := hcp.Spec.Platform.Azure.Cloud
+	if azureEnvironment == "" {
+		azureEnvironment = "AzurePublicCloud"
+	}
+
+	podSpec.Containers = append(podSpec.Containers, corev1.Container{
+		Name:            "azure-workload-identity-webhook",
+		Image:           "azure-workload-identity-webhook",
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Env: []corev1.EnvVar{
+			{
+				Name:  "AZURE_ENVIRONMENT",
+				Value: azureEnvironment,
+			},
+			{
+				Name:  "AZURE_TENANT_ID",
+				Value: hcp.Spec.Platform.Azure.TenantID,
+			},
+			{
+				Name:  "KUBECONFIG",
+				Value: "/var/run/app/kubeconfig/kubeconfig",
+			},
+		},
+		Command: []string{
+			"/usr/bin/azure-workload-identity-webhook",
+		},
+		Args: []string{
+			"--in-cluster=false",
+			"--port=9443",
+			"--tls-cert-file=/var/run/app/certs/tls.crt",
+			"--tls-key-file=/var/run/app/certs/tls.key",
+			"--logtostderr",
+		},
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("10m"),
+				corev1.ResourceMemory: resource.MustParse("25Mi"),
+			},
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{Name: azureWorkloadIdentityWebhookServingCertVolumeName, MountPath: "/var/run/app/certs"},
+			{Name: azureWorkloadIdentityWebhookKubeconfigVolumeName, MountPath: "/var/run/app/kubeconfig"},
+		},
+	})
+
+	podSpec.Volumes = append(podSpec.Volumes,
+		corev1.Volume{
+			Name: azureWorkloadIdentityWebhookServingCertVolumeName,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{SecretName: manifests.AzureWorkloadIdentityWebhookServingCert("").Name},
+			},
+		},
+		corev1.Volume{
+			Name: azureWorkloadIdentityWebhookKubeconfigVolumeName,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{SecretName: manifests.AzureWorkloadIdentityWebhookKubeconfig("").Name},
 			},
 		},
 	)
