@@ -62,6 +62,7 @@ type PhaseDetail struct {
 // CommentDetail represents a review comment with classification details.
 type CommentDetail struct {
 	ID              int64    `json:"id"`
+	IssueID         int64    `json:"issue_id,omitempty"`
 	GitHubCommentID int64    `json:"github_comment_id,omitempty"`
 	Author          string   `json:"author"`
 	Body            string   `json:"body"`

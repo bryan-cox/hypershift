@@ -602,6 +602,22 @@ td a:hover {
   margin-left: 0;
 }
 
+.edit-classification-link {
+  font-size: 0.8em;
+  color: var(--accent-blue);
+  text-decoration: none;
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--accent-blue);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.edit-classification-link:hover {
+  background: var(--accent-blue);
+  color: white;
+}
+
 /* Issue Detail Page */
 .issue-header {
   background: var(--content-bg);

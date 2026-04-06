@@ -262,6 +262,7 @@ func (s *Server) handleGetCommentsSummary(w http.ResponseWriter, r *http.Request
 	for i, c := range comments {
 		result[i] = CommentDetail{
 			ID:              c.ID,
+			IssueID:         c.IssueID,
 			GitHubCommentID: c.GitHubCommentID,
 			Author:          c.Author,
 			Body:            c.Body,

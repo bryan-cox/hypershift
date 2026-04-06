@@ -139,7 +139,7 @@ function renderPRMetrics() {
       <div class="value">${formatNumber(issueData.complexity_delta || 0)}</div>
     </div>
     <div class="metric-card">
-      <div class="label">Quality Score</div>
+      <div class="label">Quality Score <span class="info-tip" data-tip="Review comment count for this issue. On the overview page, the averaged score uses: comments / (lines_changed × files_changed × complexity_delta).">i</span></div>
       <div class="value">${issueData.quality_score != null ? issueData.quality_score.toFixed(1) : 'N/A'}</div>
     </div>
     <div class="metric-card">
