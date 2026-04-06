@@ -191,7 +191,7 @@ function renderReviewComments() {
     commentDiv.dataset.commentId = comment.id;
 
     const severityOptions = ['', 'nitpick', 'suggestion', 'required_change', 'question'];
-    const topicOptions = ['', 'style', 'logic_bug', 'test_gap', 'api_design', 'documentation'];
+    const topicOptions = ['', 'style', 'logic_bug', 'test_gap', 'api_design', 'architecture_design', 'security', 'documentation', 'ci', 'approval', 'process'];
 
     const severitySelect = severityOptions.map(opt =>
       `<option value="${opt}" ${comment.severity === opt ? 'selected' : ''}>${opt || 'Not classified'}</option>`

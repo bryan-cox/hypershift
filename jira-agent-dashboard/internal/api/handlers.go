@@ -21,15 +21,17 @@ var (
 		"unclassified":    true,
 	}
 	allowedTopics = map[string]bool{
-		"style":           true,
-		"logic_bug":       true,
-		"test_gap":        true,
-		"api_design":      true,
-		"documentation":   true,
-		"ci":              true,
-		"approval":        true,
-		"process":         true,
-		"unclassified":    true,
+		"style":               true,
+		"logic_bug":           true,
+		"test_gap":            true,
+		"api_design":          true,
+		"architecture_design": true,
+		"security":            true,
+		"documentation":       true,
+		"ci":                  true,
+		"approval":            true,
+		"process":             true,
+		"unclassified":        true,
 	}
 )
 
@@ -422,10 +424,14 @@ func calculateQualityScore(prState string, comments []db.ReviewComment, linesCha
 	topics := 10.0
 	for _, c := range comments {
 		switch c.Topic {
+		case "security":
+			topics -= 5
 		case "logic_bug":
 			topics -= 5
 		case "test_gap":
 			topics -= 3
+		case "architecture_design":
+			topics -= 2
 		case "style":
 			topics -= 1
 		}

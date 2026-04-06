@@ -122,6 +122,8 @@ function renderTopicChart(comments) {
     'logic_bug': 0,
     'test_gap': 0,
     'api_design': 0,
+    'architecture_design': 0,
+    'security': 0,
     'documentation': 0,
     'ci': 0,
     'approval': 0,
@@ -144,15 +146,17 @@ function renderTopicChart(comments) {
   const data = filtered.map(([, count]) => count);
 
   const colorMap = {
-    'style':           '#27ae60',
-    'logic_bug':       '#e74c3c',
-    'test_gap':        '#f1c40f',
-    'api_design':      '#3498db',
-    'documentation':   '#2ecc71',
-    'ci':              '#e67e22',
-    'approval':        '#1abc9c',
-    'process':         '#34495e',
-    'unclassified':    '#95a5a6'
+    'style':               '#27ae60',
+    'logic_bug':           '#e74c3c',
+    'test_gap':            '#f1c40f',
+    'api_design':          '#3498db',
+    'architecture_design': '#5c6bc0',
+    'security':            '#d32f2f',
+    'documentation':       '#2ecc71',
+    'ci':                  '#e67e22',
+    'approval':            '#1abc9c',
+    'process':             '#34495e',
+    'unclassified':        '#95a5a6'
   };
   const backgroundColors = filtered.map(([t]) => colorMap[t] || '#95a5a6');
 

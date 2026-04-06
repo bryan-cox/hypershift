@@ -594,8 +594,10 @@ WITH issue_stats AS (
 			ELSE 0 END)
 			FROM review_comments rc WHERE rc.issue_id = i.id ` + commentFilterSQL("rc.author", "rc.body") + `), 0) AS severity_penalty,
 		COALESCE((SELECT SUM(CASE
+			WHEN rc.topic = 'security' THEN 5
 			WHEN rc.topic = 'logic_bug' THEN 5
 			WHEN rc.topic = 'test_gap' THEN 3
+			WHEN rc.topic = 'architecture_design' THEN 2
 			WHEN rc.topic = 'style' THEN 1
 			ELSE 0 END)
 			FROM review_comments rc WHERE rc.issue_id = i.id ` + commentFilterSQL("rc.author", "rc.body") + `), 0) AS topic_penalty
