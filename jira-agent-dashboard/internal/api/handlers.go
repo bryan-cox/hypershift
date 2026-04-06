@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/openshift/jira-agent-dashboard/internal/db"
 )
 
 var (
@@ -126,7 +128,7 @@ func (s *Server) handleGetIssues(w http.ResponseWriter, r *http.Request) {
 			ComplexityDelta:    complexityDelta,
 			TotalCost:          totalCost,
 			MergeDuration:      issue.MergeDurationHours,
-			QualityScore:       float64(len(comments)),
+			QualityScore:       calculateQualityScore(issue.PRState, comments, linesAdded+linesDeleted),
 			CreatedAt:          formatOptionalTime(issue.StartedAt),
 		}
 		result = append(result, summary)
@@ -235,7 +237,7 @@ func (s *Server) handleGetIssueDetail(w http.ResponseWriter, r *http.Request) {
 			ComplexityDelta:    complexityDelta,
 			TotalCost:          totalCost,
 			MergeDuration:      issue.MergeDurationHours,
-			QualityScore:       float64(len(comments)),
+			QualityScore:       calculateQualityScore(issue.PRState, comments, linesAdded+linesDeleted),
 			CreatedAt:          formatOptionalTime(issue.MergedAt),
 		},
 		Phases:   phaseDetails,
@@ -366,6 +368,73 @@ func (s *Server) handlePatchComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, result)
+}
+
+// calculateQualityScore computes a 0–100 quality score for an AI-generated PR.
+//
+// Components:
+//   - Outcome (40 pts):  merged=40, open=20, closed=0
+//   - Severity (35 pts): start at 35, deduct per comment severity
+//   - Density  (15 pts): fewer comments per 100 lines changed = better
+//   - Topics   (10 pts): deduct for logic bugs and test gaps found
+func calculateQualityScore(prState string, comments []db.ReviewComment, linesChanged int) float64 {
+	// Outcome component (0–40)
+	var outcome float64
+	switch prState {
+	case "merged":
+		outcome = 40
+	case "open":
+		outcome = 20
+	default: // closed
+		outcome = 0
+	}
+
+	// Severity component (0–35)
+	severity := 35.0
+	for _, c := range comments {
+		switch c.Severity {
+		case "required_change":
+			severity -= 8
+		case "question":
+			severity -= 4
+		case "suggestion":
+			severity -= 2
+		case "nitpick":
+			severity -= 1
+		}
+	}
+	if severity < 0 {
+		severity = 0
+	}
+
+	// Density component (0–15): comments per 100 lines changed
+	density := 15.0
+	if linesChanged > 0 && len(comments) > 0 {
+		commentsPerHundred := float64(len(comments)) / float64(linesChanged) * 100
+		// Scale: 0 comments/100 lines = 15, 10+ comments/100 lines = 0
+		density = 15 * (1 - commentsPerHundred/10)
+		if density < 0 {
+			density = 0
+		}
+	}
+
+	// Topic component (0–10)
+	topics := 10.0
+	for _, c := range comments {
+		switch c.Topic {
+		case "logic_bug":
+			topics -= 5
+		case "test_gap":
+			topics -= 3
+		case "style":
+			topics -= 1
+		}
+	}
+	if topics < 0 {
+		topics = 0
+	}
+
+	return outcome + severity + density + topics
 }
 
 func parseDateRange(r *http.Request) (time.Time, time.Time, error) {

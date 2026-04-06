@@ -573,7 +573,7 @@ func (s *Store) GetOpenIssues() ([]Issue, error) {
 }
 
 // GetWeeklyTrends returns aggregated weekly statistics for issues within the given time range.
-// Quality score formula: review_comment_count / (max(lines_changed, 1) * max(files_changed, 1) * max(complexity_delta, 1))
+// Quality score (0-100): outcome(40) + severity(35) + density(15) + topics(10)
 func (s *Store) GetWeeklyTrends(from, to time.Time) ([]WeeklyTrend, error) {
 	query := `
 WITH issue_stats AS (
@@ -585,8 +585,20 @@ WITH issue_stats AS (
 		COALESCE((SELECT SUM(pm.duration_ms) FROM phase_metrics pm WHERE pm.issue_id = i.id), 0) AS total_duration,
 		COALESCE((SELECT COUNT(*) FROM review_comments rc WHERE rc.issue_id = i.id ` + commentFilterSQL("rc.author", "rc.body") + `), 0) AS comment_count,
 		COALESCE((SELECT pc.lines_added + pc.lines_deleted FROM pr_complexity pc WHERE pc.issue_id = i.id), 0) AS lines_changed,
-		COALESCE((SELECT pc.files_changed FROM pr_complexity pc WHERE pc.issue_id = i.id), 0) AS files_changed,
-		COALESCE((SELECT pc.cyclomatic_complexity_delta FROM pr_complexity pc WHERE pc.issue_id = i.id), 0) AS complexity_delta
+		CASE WHEN i.pr_state = 'merged' THEN 40 WHEN i.pr_state = 'open' THEN 20 ELSE 0 END AS outcome_score,
+		COALESCE((SELECT SUM(CASE
+			WHEN rc.severity = 'required_change' THEN 8
+			WHEN rc.severity = 'question' THEN 4
+			WHEN rc.severity = 'suggestion' THEN 2
+			WHEN rc.severity = 'nitpick' THEN 1
+			ELSE 0 END)
+			FROM review_comments rc WHERE rc.issue_id = i.id ` + commentFilterSQL("rc.author", "rc.body") + `), 0) AS severity_penalty,
+		COALESCE((SELECT SUM(CASE
+			WHEN rc.topic = 'logic_bug' THEN 5
+			WHEN rc.topic = 'test_gap' THEN 3
+			WHEN rc.topic = 'style' THEN 1
+			ELSE 0 END)
+			FROM review_comments rc WHERE rc.issue_id = i.id ` + commentFilterSQL("rc.author", "rc.body") + `), 0) AS topic_penalty
 	FROM issues i
 	JOIN job_runs jr ON i.job_run_id = jr.id
 	WHERE COALESCE(i.pr_created_at, jr.started_at) >= ? AND COALESCE(i.pr_created_at, jr.started_at) < ?
@@ -600,9 +612,12 @@ SELECT
 	AVG(total_duration) AS avg_duration_ms,
 	AVG(comment_count) AS avg_review_comments,
 	AVG(
-		CAST(comment_count AS REAL) / (
-			MAX(lines_changed, 1) * MAX(files_changed, 1) * MAX(complexity_delta, 1)
-		)
+		outcome_score
+		+ MAX(35.0 - severity_penalty, 0)
+		+ CASE WHEN lines_changed > 0 AND comment_count > 0
+			THEN MAX(15.0 * (1.0 - CAST(comment_count AS REAL) / CAST(lines_changed AS REAL) * 10.0), 0)
+			ELSE 15.0 END
+		+ MAX(10.0 - topic_penalty, 0)
 	) AS avg_quality_score
 FROM issue_stats
 GROUP BY week_start

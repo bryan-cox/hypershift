@@ -61,13 +61,13 @@ function renderPhaseBreakdown() {
     return;
   }
 
-  const labels = issueData.phases.map(p => p.phase_name);
+  const labels = issueData.phases.map(p => p.phase);
   const durations = issueData.phases.map(p => {
     // Convert milliseconds to minutes for better readability
-    const ms = p.duration || 0;
+    const ms = p.duration_ms || 0;
     return ms / (1000 * 60);
   });
-  const costs = issueData.phases.map(p => p.cost || 0);
+  const costs = issueData.phases.map(p => p.cost_usd || 0);
 
   phaseChart = new Chart(ctx, {
     type: 'bar',
@@ -139,7 +139,7 @@ function renderPRMetrics() {
       <div class="value">${formatNumber(issueData.complexity_delta || 0)}</div>
     </div>
     <div class="metric-card">
-      <div class="label">Quality Score <span class="info-tip" data-tip="Review comment count for this issue. On the overview page, the averaged score uses: comments / (lines_changed × files_changed × complexity_delta).">i</span></div>
+      <div class="label">Quality Score <span class="info-tip" data-tip="0–100 score. Outcome (40pts: merged=40, open=20, closed=0) + Severity (35pts: deduct per comment severity) + Density (15pts: fewer comments per 100 lines = better) + Topics (10pts: deduct for logic bugs, test gaps).">i</span></div>
       <div class="value">${issueData.quality_score != null ? issueData.quality_score.toFixed(1) : 'N/A'}</div>
     </div>
     <div class="metric-card">
