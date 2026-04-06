@@ -266,11 +266,11 @@ function renderCommentList(comments) {
     const classDiv = document.createElement('div');
     classDiv.className = 'comment-classification';
     const confidenceHTML = comment.confidence != null
-      ? `<span class="tag confidence" title="Classification confidence">${(comment.confidence * 100).toFixed(0)}%</span>`
+      ? `<span class="classification-label">Confidence:</span> <span class="tag confidence" title="Classification confidence">${(comment.confidence * 100).toFixed(0)}%</span>`
       : '';
     classDiv.innerHTML = `
-      <span class="tag ${severity}">${severity.replace(/_/g, ' ')}</span>
-      <span class="tag ${topic}">${topic.replace(/_/g, ' ')}</span>
+      <span class="classification-label">Severity:</span> <span class="tag ${severity}">${severity.replace(/_/g, ' ')}</span>
+      <span class="classification-label">Topic:</span> <span class="tag ${topic}">${topic.replace(/_/g, ' ')}</span>
       ${confidenceHTML}
       ${comment.ai_classified ? '<span style="font-size:0.75em; color: var(--text-secondary);">AI classified</span>' : ''}
     `;

@@ -590,6 +590,18 @@ td a:hover {
   font-weight: 600;
 }
 
+.classification-label {
+  font-size: 0.75em;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-left: 8px;
+}
+
+.classification-label:first-child {
+  margin-left: 0;
+}
+
 /* Issue Detail Page */
 .issue-header {
   background: var(--content-bg);
