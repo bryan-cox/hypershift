@@ -265,9 +265,13 @@ function renderCommentList(comments) {
 
     const classDiv = document.createElement('div');
     classDiv.className = 'comment-classification';
+    const confidenceHTML = comment.confidence != null
+      ? `<span class="tag confidence" title="Classification confidence">${(comment.confidence * 100).toFixed(0)}%</span>`
+      : '';
     classDiv.innerHTML = `
       <span class="tag ${severity}">${severity.replace(/_/g, ' ')}</span>
       <span class="tag ${topic}">${topic.replace(/_/g, ' ')}</span>
+      ${confidenceHTML}
       ${comment.ai_classified ? '<span style="font-size:0.75em; color: var(--text-secondary);">AI classified</span>' : ''}
     `;
     div.appendChild(classDiv);
@@ -399,6 +403,7 @@ function generateMarkdownReport(comments) {
     md += `### ${c.author} — ${date}\n\n`;
     if (prRef) md += `**PR:** [${prRef}](${c.pr_url})\n`;
     md += `**Severity:** ${s.replace(/_/g, ' ')} | **Topic:** ${t.replace(/_/g, ' ')}`;
+    if (c.confidence != null) md += ` | **Confidence:** ${(c.confidence * 100).toFixed(0)}%`;
     if (c.ai_classified) md += ` | _AI classified_`;
     md += `\n\n`;
     md += `${c.body}\n\n---\n\n`;

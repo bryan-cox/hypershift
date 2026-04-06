@@ -584,6 +584,12 @@ td a:hover {
   color: #757575;
 }
 
+.tag.confidence {
+  background: #e8eaf6;
+  color: #283593;
+  font-weight: 600;
+}
+
 /* Issue Detail Page */
 .issue-header {
   background: var(--content-bg);

@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS review_comments (
 	created_at DATETIME NOT NULL,
 	severity TEXT,
 	topic TEXT,
+	confidence REAL,
 	ai_classified INTEGER DEFAULT 0,
 	human_override INTEGER DEFAULT 0
 );
@@ -81,6 +82,7 @@ CREATE TABLE IF NOT EXISTS pr_complexity (
 	migrations := []string{
 		"ALTER TABLE issues ADD COLUMN pr_created_at DATETIME",
 		"ALTER TABLE issues ADD COLUMN closed_at DATETIME",
+		"ALTER TABLE review_comments ADD COLUMN confidence REAL",
 	}
 	for _, m := range migrations {
 		// SQLite returns an error if column already exists; ignore it.

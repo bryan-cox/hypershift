@@ -52,6 +52,7 @@ type ReviewComment struct {
 	CreatedAt       time.Time
 	Severity        string // nitpick / suggestion / required_change / question
 	Topic           string // style / logic_bug / test_gap / api_design / documentation
+	Confidence      *float64
 	AIClassified    bool
 	HumanOverride   bool
 }

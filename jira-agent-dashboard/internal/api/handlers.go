@@ -208,6 +208,7 @@ func (s *Server) handleGetIssueDetail(w http.ResponseWriter, r *http.Request) {
 			CreatedAt:       c.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			Severity:        c.Severity,
 			Topic:           c.Topic,
+			Confidence:      c.Confidence,
 			AIClassified:    c.AIClassified,
 			HumanOverride:   c.HumanOverride,
 		}
@@ -267,6 +268,7 @@ func (s *Server) handleGetCommentsSummary(w http.ResponseWriter, r *http.Request
 			CreatedAt:       c.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			Severity:        c.Severity,
 			Topic:           c.Topic,
+			Confidence:      c.Confidence,
 			AIClassified:    c.AIClassified,
 			HumanOverride:   c.HumanOverride,
 			PRURL:           c.PRURL,
@@ -299,6 +301,7 @@ func (s *Server) handleGetComments(w http.ResponseWriter, r *http.Request) {
 			CreatedAt:       c.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			Severity:        c.Severity,
 			Topic:           c.Topic,
+			Confidence:      c.Confidence,
 			AIClassified:    c.AIClassified,
 			HumanOverride:   c.HumanOverride,
 		}
@@ -356,6 +359,7 @@ func (s *Server) handlePatchComment(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:       comment.CreatedAt.Format("2006-01-02T15:04:05Z"),
 		Severity:        comment.Severity,
 		Topic:           comment.Topic,
+		Confidence:      comment.Confidence,
 		AIClassified:    comment.AIClassified,
 		HumanOverride:   comment.HumanOverride,
 	}

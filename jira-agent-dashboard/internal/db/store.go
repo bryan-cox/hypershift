@@ -315,7 +315,7 @@ func (s *Store) InsertReviewComment(c *ReviewComment) (int64, error) {
 // GetReviewCommentsByIssueID retrieves review comments for a given issue, excluding bot authors.
 func (s *Store) GetReviewCommentsByIssueID(issueID int64) ([]ReviewComment, error) {
 	query := fmt.Sprintf(
-		`SELECT rc.id, rc.issue_id, rc.github_comment_id, rc.author, rc.body, rc.created_at, rc.severity, rc.topic, rc.ai_classified, rc.human_override
+		`SELECT rc.id, rc.issue_id, rc.github_comment_id, rc.author, rc.body, rc.created_at, rc.severity, rc.topic, rc.confidence, rc.ai_classified, rc.human_override
 		 FROM review_comments rc WHERE rc.issue_id = ? %s ORDER BY rc.id`, commentFilterSQL("rc.author", "rc.body"))
 	rows, err := s.db.Query(query, issueID)
 	if err != nil {
@@ -328,7 +328,7 @@ func (s *Store) GetReviewCommentsByIssueID(issueID int64) ([]ReviewComment, erro
 // GetUnclassifiedComments returns non-bot comments where severity is NULL.
 func (s *Store) GetUnclassifiedComments() ([]ReviewComment, error) {
 	query := fmt.Sprintf(
-		`SELECT rc.id, rc.issue_id, rc.github_comment_id, rc.author, rc.body, rc.created_at, rc.severity, rc.topic, rc.ai_classified, rc.human_override
+		`SELECT rc.id, rc.issue_id, rc.github_comment_id, rc.author, rc.body, rc.created_at, rc.severity, rc.topic, rc.confidence, rc.ai_classified, rc.human_override
 		 FROM review_comments rc WHERE rc.severity IS NULL %s ORDER BY rc.id`, commentFilterSQL("rc.author", "rc.body"))
 	rows, err := s.db.Query(query)
 	if err != nil {
@@ -343,10 +343,11 @@ func (s *Store) scanReviewComments(rows *sql.Rows) ([]ReviewComment, error) {
 	for rows.Next() {
 		var c ReviewComment
 		var severity, topic sql.NullString
+		var confidence sql.NullFloat64
 		var aiClassified, humanOverride int
 		err := rows.Scan(
 			&c.ID, &c.IssueID, &c.GitHubCommentID, &c.Author, &c.Body, &c.CreatedAt,
-			&severity, &topic, &aiClassified, &humanOverride,
+			&severity, &topic, &confidence, &aiClassified, &humanOverride,
 		)
 		if err != nil {
 			return nil, err
@@ -356,6 +357,9 @@ func (s *Store) scanReviewComments(rows *sql.Rows) ([]ReviewComment, error) {
 		}
 		if topic.Valid {
 			c.Topic = topic.String
+		}
+		if confidence.Valid {
+			c.Confidence = &confidence.Float64
 		}
 		c.AIClassified = aiClassified != 0
 		c.HumanOverride = humanOverride != 0
@@ -369,7 +373,7 @@ func (s *Store) scanReviewComments(rows *sql.Rows) ([]ReviewComment, error) {
 func (s *Store) GetCommentsByDateRange(from, to time.Time) ([]CommentWithContext, error) {
 	query := fmt.Sprintf(
 		`SELECT rc.id, rc.issue_id, rc.github_comment_id, rc.author, rc.body, rc.created_at,
-		        rc.severity, rc.topic, rc.ai_classified, rc.human_override, COALESCE(i.pr_url, '')
+		        rc.severity, rc.topic, rc.confidence, rc.ai_classified, rc.human_override, COALESCE(i.pr_url, '')
 		 FROM review_comments rc
 		 JOIN issues i ON rc.issue_id = i.id
 		 JOIN job_runs jr ON i.job_run_id = jr.id
@@ -386,10 +390,11 @@ func (s *Store) GetCommentsByDateRange(from, to time.Time) ([]CommentWithContext
 	for rows.Next() {
 		var c CommentWithContext
 		var severity, topic sql.NullString
+		var confidence sql.NullFloat64
 		var aiClassified, humanOverride int
 		err := rows.Scan(
 			&c.ID, &c.IssueID, &c.GitHubCommentID, &c.Author, &c.Body, &c.CreatedAt,
-			&severity, &topic, &aiClassified, &humanOverride, &c.PRURL,
+			&severity, &topic, &confidence, &aiClassified, &humanOverride, &c.PRURL,
 		)
 		if err != nil {
 			return nil, err
@@ -399,6 +404,9 @@ func (s *Store) GetCommentsByDateRange(from, to time.Time) ([]CommentWithContext
 		}
 		if topic.Valid {
 			c.Topic = topic.String
+		}
+		if confidence.Valid {
+			c.Confidence = &confidence.Float64
 		}
 		c.AIClassified = aiClassified != 0
 		c.HumanOverride = humanOverride != 0
@@ -410,15 +418,16 @@ func (s *Store) GetCommentsByDateRange(from, to time.Time) ([]CommentWithContext
 // GetReviewCommentByID retrieves a single review comment by its ID.
 func (s *Store) GetReviewCommentByID(id int64) (*ReviewComment, error) {
 	row := s.db.QueryRow(
-		`SELECT id, issue_id, github_comment_id, author, body, created_at, severity, topic, ai_classified, human_override
+		`SELECT id, issue_id, github_comment_id, author, body, created_at, severity, topic, confidence, ai_classified, human_override
 		 FROM review_comments WHERE id = ?`, id,
 	)
 	var c ReviewComment
 	var severity, topic sql.NullString
+	var confidence sql.NullFloat64
 	var aiClassified, humanOverride int
 	err := row.Scan(
 		&c.ID, &c.IssueID, &c.GitHubCommentID, &c.Author, &c.Body, &c.CreatedAt,
-		&severity, &topic, &aiClassified, &humanOverride,
+		&severity, &topic, &confidence, &aiClassified, &humanOverride,
 	)
 	if err != nil {
 		return nil, err
@@ -428,6 +437,9 @@ func (s *Store) GetReviewCommentByID(id int64) (*ReviewComment, error) {
 	}
 	if topic.Valid {
 		c.Topic = topic.String
+	}
+	if confidence.Valid {
+		c.Confidence = &confidence.Float64
 	}
 	c.AIClassified = aiClassified != 0
 	c.HumanOverride = humanOverride != 0

@@ -61,16 +61,17 @@ type PhaseDetail struct {
 
 // CommentDetail represents a review comment with classification details.
 type CommentDetail struct {
-	ID              int64  `json:"id"`
-	GitHubCommentID int64  `json:"github_comment_id,omitempty"`
-	Author          string `json:"author"`
-	Body            string `json:"body"`
-	CreatedAt       string `json:"created_at"`
-	Severity        string `json:"severity"`
-	Topic           string `json:"topic"`
-	AIClassified    bool   `json:"ai_classified"`
-	HumanOverride   bool   `json:"human_override"`
-	PRURL           string `json:"pr_url,omitempty"`
+	ID              int64    `json:"id"`
+	GitHubCommentID int64    `json:"github_comment_id,omitempty"`
+	Author          string   `json:"author"`
+	Body            string   `json:"body"`
+	CreatedAt       string   `json:"created_at"`
+	Severity        string   `json:"severity"`
+	Topic           string   `json:"topic"`
+	Confidence      *float64 `json:"confidence"`
+	AIClassified    bool     `json:"ai_classified"`
+	HumanOverride   bool     `json:"human_override"`
+	PRURL           string   `json:"pr_url,omitempty"`
 }
 
 // ClassificationUpdate represents a request to update comment classification.
