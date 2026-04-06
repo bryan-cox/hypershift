@@ -64,6 +64,7 @@ function renderIssuesTable() {
       <td>${formatNumber(issue.files_changed)}</td>
       <td>${formatCost(issue.total_cost)}</td>
       <td>${formatDuration(issue.merge_duration)}</td>
+      <td class="row-action"><span class="row-chevron" title="View issue details">›</span></td>
     `;
 
     tbody.appendChild(row);

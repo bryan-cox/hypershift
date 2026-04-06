@@ -467,6 +467,28 @@ tbody tr:hover {
   cursor: pointer;
 }
 
+tbody tr:hover .row-chevron {
+  color: var(--accent-blue);
+}
+
+.row-action-header {
+  width: 30px;
+  padding: 0;
+}
+
+.row-action {
+  text-align: center;
+  padding: 0;
+  width: 30px;
+}
+
+.row-chevron {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: var(--border-color);
+  transition: color 0.2s;
+}
+
 td {
   padding: 15px;
   font-size: 0.9em;
