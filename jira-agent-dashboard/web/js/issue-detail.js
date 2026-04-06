@@ -91,25 +91,50 @@ function renderPhaseBreakdown() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      indexAxis: 'y',
       scales: {
+        x: {
+          ticks: {
+            font: { weight: '600' }
+          }
+        },
         y: {
           beginAtZero: true,
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Duration (minutes)'
+          },
           ticks: {
             callback: function(value) {
-              return value.toFixed(0) + 'm';
+              return value.toFixed(1) + 'm';
             }
           }
         },
         y1: {
           beginAtZero: true,
           position: 'right',
+          title: {
+            display: true,
+            text: 'Cost ($)'
+          },
           grid: {
             drawOnChartArea: false
           },
           ticks: {
             callback: function(value) {
               return '$' + value.toFixed(2);
+            }
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              if (context.dataset.yAxisID === 'y1') {
+                return 'Cost: $' + context.parsed.y.toFixed(2);
+              }
+              return 'Duration: ' + context.parsed.y.toFixed(1) + ' min';
             }
           }
         }
