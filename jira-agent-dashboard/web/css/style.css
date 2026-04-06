@@ -468,25 +468,33 @@ tbody tr:hover {
 }
 
 tbody tr:hover .row-chevron {
-  color: var(--accent-blue);
+  color: white;
+  background: var(--accent-blue);
 }
 
 .row-action-header {
-  width: 30px;
+  width: 40px;
   padding: 0;
 }
 
 .row-action {
   text-align: center;
-  padding: 0;
-  width: 30px;
+  padding: 8px;
+  width: 40px;
 }
 
 .row-chevron {
-  font-size: 1.4em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 1.1em;
   font-weight: 700;
-  color: var(--border-color);
-  transition: color 0.2s;
+  color: var(--accent-blue);
+  background: #e8f4fd;
+  transition: all 0.2s;
 }
 
 td {

@@ -63,8 +63,9 @@ function renderIssuesTable() {
       <td class="lines-deleted">-${formatNumber(issue.lines_deleted)}</td>
       <td>${formatNumber(issue.files_changed)}</td>
       <td>${formatCost(issue.total_cost)}</td>
+      <td>${issue.quality_score != null ? issue.quality_score.toFixed(1) : 'N/A'}</td>
       <td>${formatDuration(issue.merge_duration)}</td>
-      <td class="row-action"><span class="row-chevron" title="View issue details">›</span></td>
+      <td class="row-action"><span class="row-chevron" title="View issue details">→</span></td>
     `;
 
     tbody.appendChild(row);
@@ -148,6 +149,10 @@ function setupSortHandlers() {
 
   document.querySelector('[data-column="cost"]').addEventListener('click', () => {
     sortTable('cost', issue => issue.total_cost || 0);
+  });
+
+  document.querySelector('[data-column="quality_score"]').addEventListener('click', () => {
+    sortTable('quality_score', issue => issue.quality_score || 0);
   });
 
   document.querySelector('[data-column="duration"]').addEventListener('click', () => {
