@@ -48,9 +48,10 @@ echo "Analyze this test failure: ..." | podman run -i --rm \
 
 ## How It Works
 
-1. On first run, the entrypoint registers the [openshift-eng/ai-helpers](https://github.com/openshift-eng/ai-helpers) marketplace and installs plugins (ci, jira, utils, git, code-review)
-2. All arguments are forwarded to `claude --print`, so any Claude Code flags work (e.g. `--allowedTools`, `--system-prompt`, `--model`, `--max-turns`)
-3. Claude's response is printed to stdout
+1. The image ships a native Claude Code binary (installed via `curl -fsSL https://claude.ai/install.sh | bash`, no npm needed)
+2. On first run, the entrypoint registers the [openshift-eng/ai-helpers](https://github.com/openshift-eng/ai-helpers) marketplace and installs plugins (ci, jira, utils, git, code-review)
+3. All arguments are forwarded to `claude --print`, so any Claude Code flags work (e.g. `--allowedTools`, `--system-prompt`, `--model`, `--max-turns`)
+4. Claude's response is printed to stdout
 
 ## Permissions
 

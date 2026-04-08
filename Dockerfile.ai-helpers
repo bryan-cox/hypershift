@@ -6,12 +6,11 @@ RUN dnf install -y --setopt=install_weak_deps=False \
         ca-certificates \
         jq \
         gh \
-    && curl -fsSL https://rpm.nodesource.com/setup_22.x | bash - \
-    && dnf install -y --setopt=install_weak_deps=False nodejs \
     && dnf clean all
 
-# Install Claude Code CLI
-RUN npm install -g @anthropic-ai/claude-code
+# Install Claude Code CLI (native binary, no npm needed)
+RUN curl -fsSL https://claude.ai/install.sh | bash
+ENV PATH="/root/.local/bin:${PATH}"
 
 COPY hack/tools/ai-helpers/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
