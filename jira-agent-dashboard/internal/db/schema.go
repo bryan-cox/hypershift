@@ -74,7 +74,8 @@ CREATE TABLE IF NOT EXISTS pr_complexity (
 	lines_deleted INTEGER,
 	files_changed INTEGER,
 	cyclomatic_complexity_delta REAL,
-	cognitive_complexity_delta REAL
+	cognitive_complexity_delta REAL,
+	complexity_analyzed INTEGER DEFAULT 0
 );
 `
 	_, err = db.Exec(schema)
@@ -87,6 +88,7 @@ CREATE TABLE IF NOT EXISTS pr_complexity (
 		"ALTER TABLE issues ADD COLUMN pr_created_at DATETIME",
 		"ALTER TABLE issues ADD COLUMN closed_at DATETIME",
 		"ALTER TABLE review_comments ADD COLUMN confidence REAL",
+		"ALTER TABLE pr_complexity ADD COLUMN complexity_analyzed INTEGER DEFAULT 0",
 	}
 	for _, m := range migrations {
 		_, err := db.Exec(m)

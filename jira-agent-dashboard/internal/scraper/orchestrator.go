@@ -375,6 +375,7 @@ func (o *Orchestrator) analyzeComplexity(ctx context.Context) error {
 			FilesChanged:              existing.FilesChanged,
 			CyclomaticComplexityDelta: result.CyclomaticDelta,
 			CognitiveComplexityDelta:  result.CognitiveDelta,
+			ComplexityAnalyzed:        true,
 		}); err != nil {
 			log.Printf("Warning: could not update complexity for issue %s: %v", issue.JiraKey, err)
 			continue

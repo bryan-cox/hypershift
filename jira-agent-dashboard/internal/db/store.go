@@ -459,17 +459,22 @@ func (s *Store) UpdateCommentClassification(id int64, severity, topic string, co
 // Complexity deltas are only overwritten when the incoming values are non-zero,
 // so that a PR-stats refresh doesn't wipe previously analyzed complexity.
 func (s *Store) InsertOrUpdatePRComplexity(c *PRComplexity) error {
+	analyzed := 0
+	if c.ComplexityAnalyzed {
+		analyzed = 1
+	}
 	_, err := s.db.Exec(
-		`INSERT INTO pr_complexity (issue_id, lines_added, lines_deleted, files_changed, cyclomatic_complexity_delta, cognitive_complexity_delta)
-		 VALUES (?, ?, ?, ?, ?, ?)
+		`INSERT INTO pr_complexity (issue_id, lines_added, lines_deleted, files_changed, cyclomatic_complexity_delta, cognitive_complexity_delta, complexity_analyzed)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)
 		 ON CONFLICT(issue_id) DO UPDATE SET
 		   lines_added = excluded.lines_added,
 		   lines_deleted = excluded.lines_deleted,
 		   files_changed = excluded.files_changed,
-		   cyclomatic_complexity_delta = CASE WHEN excluded.cyclomatic_complexity_delta != 0 THEN excluded.cyclomatic_complexity_delta ELSE pr_complexity.cyclomatic_complexity_delta END,
-		   cognitive_complexity_delta = CASE WHEN excluded.cognitive_complexity_delta != 0 THEN excluded.cognitive_complexity_delta ELSE pr_complexity.cognitive_complexity_delta END`,
+		   cyclomatic_complexity_delta = CASE WHEN excluded.complexity_analyzed = 1 THEN excluded.cyclomatic_complexity_delta ELSE pr_complexity.cyclomatic_complexity_delta END,
+		   cognitive_complexity_delta = CASE WHEN excluded.complexity_analyzed = 1 THEN excluded.cognitive_complexity_delta ELSE pr_complexity.cognitive_complexity_delta END,
+		   complexity_analyzed = MAX(pr_complexity.complexity_analyzed, excluded.complexity_analyzed)`,
 		c.IssueID, c.LinesAdded, c.LinesDeleted, c.FilesChanged,
-		c.CyclomaticComplexityDelta, c.CognitiveComplexityDelta,
+		c.CyclomaticComplexityDelta, c.CognitiveComplexityDelta, analyzed,
 	)
 	return err
 }
@@ -490,7 +495,7 @@ func (s *Store) GetPRComplexityByIssueID(issueID int64) (*PRComplexity, error) {
 }
 
 // GetIssuesNeedingComplexity returns issues that have a pr_complexity row but
-// cyclomatic and cognitive deltas are both 0, indicating complexity hasn't been analyzed yet.
+// complexity has not been analyzed yet (complexity_analyzed = 0).
 func (s *Store) GetIssuesNeedingComplexity() ([]Issue, error) {
 	cutoff := time.Now().Add(-30 * 24 * time.Hour)
 	rows, err := s.db.Query(
@@ -498,7 +503,7 @@ func (s *Store) GetIssuesNeedingComplexity() ([]Issue, error) {
 		 FROM issues i
 		 JOIN pr_complexity pc ON i.id = pc.issue_id
 		 WHERE i.pr_url != '' AND i.pr_number > 0
-		   AND pc.cyclomatic_complexity_delta = 0 AND pc.cognitive_complexity_delta = 0
+		   AND pc.complexity_analyzed = 0
 		   AND (i.merged_at IS NULL OR i.merged_at > ?)`,
 		cutoff,
 	)

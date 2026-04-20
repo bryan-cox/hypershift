@@ -71,6 +71,7 @@ type PRComplexity struct {
 	FilesChanged              int
 	CyclomaticComplexityDelta float64
 	CognitiveComplexityDelta  float64
+	ComplexityAnalyzed        bool
 }
 
 type IssueWithBuildID struct {

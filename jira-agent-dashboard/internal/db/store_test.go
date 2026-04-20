@@ -14,6 +14,7 @@ func newTestStore(t *testing.T) *Store {
 	if err != nil {
 		t.Fatal(err)
 	}
+	conn.SetMaxOpenConns(1)
 	t.Cleanup(func() { conn.Close() })
 
 	if err := InitSchema(conn); err != nil {
