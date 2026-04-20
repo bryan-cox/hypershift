@@ -69,6 +69,11 @@
       <!-- Comment List -->
       <div class="comments-section">
         <h3>Review Comments</h3>
+        <p class="section-note">
+          Severity, topic, and confidence scores are assigned by AI using the
+          <a href="https://github.com/openshift-eng/ai-helpers/blob/main/plugins/code-review/skills/classify-review-comment/SKILL.md#confidence-scoring-rubric" target="_blank" rel="noopener">confidence scoring rubric</a>.
+          Scores range from 0–100% based on signal word matches, category clarity, and context reinforcement.
+        </p>
         <div class="comment-filters">
           <select id="filter-severity">
             <option value="">All Severities</option>
