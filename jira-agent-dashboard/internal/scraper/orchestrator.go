@@ -361,11 +361,15 @@ func (o *Orchestrator) analyzeComplexity(ctx context.Context) error {
 			continue
 		}
 
-		// Update only the complexity deltas (diff stats already populated by github step)
+		// Update only the complexity deltas (diff stats already populated by github step).
+		// If the row doesn't exist yet (standalone complexity step), use zero diff stats.
 		existing, err := o.store.GetPRComplexityByIssueID(issue.ID)
-		if err != nil {
+		if err != nil && err != sql.ErrNoRows {
 			log.Printf("Warning: could not get existing PR complexity for issue %s: %v", issue.JiraKey, err)
 			continue
+		}
+		if existing == nil {
+			existing = &db.PRComplexity{}
 		}
 
 		if err := o.store.InsertOrUpdatePRComplexity(&db.PRComplexity{

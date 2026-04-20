@@ -231,7 +231,7 @@ function renderReviewComments() {
 
     commentDiv.innerHTML = `
       <div class="comment-header">
-        <span class="comment-author">${comment.author || 'Unknown'}</span>
+        <span class="comment-author">${escapeHTML(comment.author || 'Unknown')}</span>
         <small>${formatDate(comment.created_at)}</small>
       </div>
       <div class="comment-body">${escapeHTML(comment.body || '')}</div>
