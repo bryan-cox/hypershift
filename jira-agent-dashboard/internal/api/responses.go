@@ -77,6 +77,7 @@ type CommentDetail struct {
 
 // ClassificationUpdate represents a request to update comment classification.
 type ClassificationUpdate struct {
-	Severity string `json:"severity"`
-	Topic    string `json:"topic"`
+	Severity   string   `json:"severity"`
+	Topic      string   `json:"topic"`
+	Confidence *float64 `json:"confidence,omitempty"`
 }

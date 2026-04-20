@@ -328,7 +328,8 @@ func TestUpdateCommentClassification(t *testing.T) {
 		t.Fatalf("InsertReviewComment failed: %v", err)
 	}
 
-	err = s.UpdateCommentClassification(id, "nitpick", "style", true)
+	conf := 0.90
+	err = s.UpdateCommentClassification(id, "nitpick", "style", &conf, true)
 	if err != nil {
 		t.Fatalf("UpdateCommentClassification failed: %v", err)
 	}

@@ -446,11 +446,11 @@ func (s *Store) GetReviewCommentByID(id int64) (*ReviewComment, error) {
 	return &c, nil
 }
 
-// UpdateCommentClassification updates the severity, topic, and human_override for a comment.
-func (s *Store) UpdateCommentClassification(id int64, severity, topic string, humanOverride bool) error {
+// UpdateCommentClassification updates the severity, topic, confidence, and human_override for a comment.
+func (s *Store) UpdateCommentClassification(id int64, severity, topic string, confidence *float64, humanOverride bool) error {
 	_, err := s.db.Exec(
-		`UPDATE review_comments SET severity = ?, topic = ?, human_override = ? WHERE id = ?`,
-		severity, topic, boolToInt(humanOverride), id,
+		`UPDATE review_comments SET severity = ?, topic = ?, confidence = ?, human_override = ? WHERE id = ?`,
+		severity, topic, confidence, boolToInt(humanOverride), id,
 	)
 	return err
 }

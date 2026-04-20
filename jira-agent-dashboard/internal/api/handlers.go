@@ -340,7 +340,7 @@ func (s *Server) handlePatchComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.store.UpdateCommentClassification(id, update.Severity, update.Topic, true); err != nil {
+	if err := s.store.UpdateCommentClassification(id, update.Severity, update.Topic, update.Confidence, true); err != nil {
 		internalError(w, "updating classification", err)
 		return
 	}
