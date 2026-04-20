@@ -5,10 +5,13 @@ BINARY_DIR := bin
 
 build: dashboard scraper
 
-dashboard:
+$(BINARY_DIR):
+	mkdir -p $(BINARY_DIR)
+
+dashboard: | $(BINARY_DIR)
 	$(GO) build -o $(BINARY_DIR)/dashboard ./cmd/dashboard
 
-scraper:
+scraper: | $(BINARY_DIR)
 	$(GO) build -o $(BINARY_DIR)/scraper ./cmd/scraper
 
 test:

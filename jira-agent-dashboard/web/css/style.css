@@ -91,6 +91,15 @@ nav.collapsed .nav-header {
   background: rgba(255,255,255,0.1);
 }
 
+/* Keyboard accessibility */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
 .nav-toggle .bar {
   display: block;
   width: 18px;

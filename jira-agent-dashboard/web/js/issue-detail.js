@@ -26,17 +26,45 @@ function renderIssueDetail() {
   const statusClass = issueData.pr_merged ? 'merged' : (issueData.pr_closed ? 'closed' : 'open');
   const status = issueData.pr_merged ? 'merged' : (issueData.pr_closed ? 'closed' : 'open');
 
-  header.innerHTML = `
-    <h2>
-      <a href="${issueData.jira_url}" target="_blank">${issueData.jira_key}</a>
-    </h2>
-    <div class="meta">
-      <span><a href="${issueData.pr_url}" target="_blank">PR #${issueData.pr_number}</a></span>
-      <span><span class="badge ${statusClass}">${status}</span></span>
-      <span>Duration: ${formatDuration(issueData.merge_duration)}</span>
-      <span>Cost: ${formatCost(issueData.total_cost)}</span>
-    </div>
-  `;
+  header.innerHTML = '';
+  const h2 = document.createElement('h2');
+  const jiraLink = document.createElement('a');
+  jiraLink.textContent = issueData.jira_key;
+  if (issueData.jira_url && issueData.jira_url.startsWith('https://')) {
+    jiraLink.href = issueData.jira_url;
+  }
+  jiraLink.target = '_blank';
+  h2.appendChild(jiraLink);
+  header.appendChild(h2);
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const prSpan = document.createElement('span');
+  const prLink = document.createElement('a');
+  prLink.textContent = `PR #${issueData.pr_number}`;
+  if (issueData.pr_url && issueData.pr_url.startsWith('https://')) {
+    prLink.href = issueData.pr_url;
+  }
+  prLink.target = '_blank';
+  prSpan.appendChild(prLink);
+  meta.appendChild(prSpan);
+
+  const badgeSpan = document.createElement('span');
+  const badge = document.createElement('span');
+  badge.className = `badge ${statusClass}`;
+  badge.textContent = status;
+  badgeSpan.appendChild(badge);
+  meta.appendChild(badgeSpan);
+
+  const durSpan = document.createElement('span');
+  durSpan.textContent = `Duration: ${formatDuration(issueData.merge_duration)}`;
+  meta.appendChild(durSpan);
+
+  const costSpan = document.createElement('span');
+  costSpan.textContent = `Cost: ${formatCost(issueData.total_cost)}`;
+  meta.appendChild(costSpan);
+
+  header.appendChild(meta);
 
   // Render phase breakdown
   renderPhaseBreakdown();

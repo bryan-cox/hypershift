@@ -240,7 +240,7 @@ func (s *Server) handleGetIssueDetail(w http.ResponseWriter, r *http.Request) {
 			TotalCost:          totalCost,
 			MergeDuration:      issue.MergeDurationHours,
 			QualityScore:       calculateQualityScore(issue.PRState, comments, linesAdded+linesDeleted),
-			CreatedAt:          formatOptionalTime(issue.MergedAt),
+			CreatedAt:          formatOptionalTime(issue.StartedAt),
 		},
 		Phases:   phaseDetails,
 		Comments: commentDetails,

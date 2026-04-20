@@ -456,6 +456,8 @@ func (s *Store) UpdateCommentClassification(id int64, severity, topic string, co
 }
 
 // InsertOrUpdatePRComplexity upserts PR complexity data for an issue.
+// Complexity deltas are only overwritten when the incoming values are non-zero,
+// so that a PR-stats refresh doesn't wipe previously analyzed complexity.
 func (s *Store) InsertOrUpdatePRComplexity(c *PRComplexity) error {
 	_, err := s.db.Exec(
 		`INSERT INTO pr_complexity (issue_id, lines_added, lines_deleted, files_changed, cyclomatic_complexity_delta, cognitive_complexity_delta)
@@ -464,8 +466,8 @@ func (s *Store) InsertOrUpdatePRComplexity(c *PRComplexity) error {
 		   lines_added = excluded.lines_added,
 		   lines_deleted = excluded.lines_deleted,
 		   files_changed = excluded.files_changed,
-		   cyclomatic_complexity_delta = excluded.cyclomatic_complexity_delta,
-		   cognitive_complexity_delta = excluded.cognitive_complexity_delta`,
+		   cyclomatic_complexity_delta = CASE WHEN excluded.cyclomatic_complexity_delta != 0 THEN excluded.cyclomatic_complexity_delta ELSE pr_complexity.cyclomatic_complexity_delta END,
+		   cognitive_complexity_delta = CASE WHEN excluded.cognitive_complexity_delta != 0 THEN excluded.cognitive_complexity_delta ELSE pr_complexity.cognitive_complexity_delta END`,
 		c.IssueID, c.LinesAdded, c.LinesDeleted, c.FilesChanged,
 		c.CyclomaticComplexityDelta, c.CognitiveComplexityDelta,
 	)

@@ -235,9 +235,10 @@ function renderCommentList(comments) {
     const severity = comment.severity || 'unclassified';
     const topic = comment.topic || 'unclassified';
     const isLong = comment.body.length > 200;
-    const prLink = comment.pr_url
-      ? `<a href="${escapeHTML(comment.pr_url)}" target="_blank" rel="noopener">${escapeHTML(comment.pr_url.replace('https://github.com/', ''))}</a>`
-      : '';
+    let prLink = '';
+    if (comment.pr_url && comment.pr_url.startsWith('https://')) {
+      prLink = `<a href="${escapeHTML(comment.pr_url)}" target="_blank" rel="noopener">${escapeHTML(comment.pr_url.replace('https://github.com/', ''))}</a>`;
+    }
 
     const div = document.createElement('div');
     div.className = 'comment';

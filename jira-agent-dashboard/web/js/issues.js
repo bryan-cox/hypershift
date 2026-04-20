@@ -3,14 +3,19 @@
 let issuesData = [];
 let sortColumn = null;
 let sortDirection = 'asc';
+let activeLoadId = 0;
 
 // Load issues from API
 async function loadIssues(from, to) {
+  const loadId = ++activeLoadId;
   try {
-    issuesData = await fetchAPI(`/api/issues?from=${from}&to=${to}`);
+    const data = await fetchAPI(`/api/issues?from=${from}&to=${to}`);
+    if (loadId !== activeLoadId) return;
+    issuesData = data;
     updateResultsCount();
     renderIssuesTable();
   } catch (error) {
+    if (loadId !== activeLoadId) return;
     showError('Failed to load issues: ' + error.message);
   }
 }

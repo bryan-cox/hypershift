@@ -22,7 +22,7 @@ func main() {
 	port := envOrDefault("PORT", "8080")
 	webDir := envOrDefault("WEB_DIR", "./web")
 
-	conn, err := sql.Open("sqlite3", dbPath+"?mode=rw")
+	conn, err := sql.Open("sqlite3", dbPath+"?mode=rwc")
 	if err != nil {
 		log.Fatalf("failed to open database: %v", err)
 	}

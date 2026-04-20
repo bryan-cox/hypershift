@@ -1,6 +1,10 @@
 package db
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+	"strings"
+)
 
 func InitSchema(db *sql.DB) error {
 	_, err := db.Exec("PRAGMA journal_mode=WAL")
@@ -85,8 +89,10 @@ CREATE TABLE IF NOT EXISTS pr_complexity (
 		"ALTER TABLE review_comments ADD COLUMN confidence REAL",
 	}
 	for _, m := range migrations {
-		// SQLite returns an error if column already exists; ignore it.
-		db.Exec(m)
+		_, err := db.Exec(m)
+		if err != nil && !strings.Contains(err.Error(), "duplicate column") {
+			return fmt.Errorf("migration %q: %w", m, err)
+		}
 	}
 
 	return nil

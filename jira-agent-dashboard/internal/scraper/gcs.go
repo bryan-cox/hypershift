@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 )
 
 const (
@@ -58,10 +60,10 @@ type gcsListResponse struct {
 }
 
 // NewHTTPGCSClient creates an HTTPGCSClient with the given http.Client.
-// If client is nil, http.DefaultClient is used.
+// If client is nil, a client with a 30-second timeout is used.
 func NewHTTPGCSClient(client *http.Client) *HTTPGCSClient {
 	if client == nil {
-		client = http.DefaultClient
+		client = &http.Client{Timeout: 30 * time.Second}
 	}
 	return &HTTPGCSClient{Client: client}
 }
@@ -247,27 +249,28 @@ func ParseBuildLog(data []byte) (*BuildLogResult, error) {
 			}
 
 			var tokens PhaseTokens
-			if err := json.Unmarshal(jsonBuf.Bytes(), &tokens); err == nil {
-				tokens.PhaseNumber = phaseNum
-				if name, ok := phaseNames[phaseNum]; ok {
-					tokens.PhaseName = name
-				} else {
-					// Fallback: assign based on phase number
-					switch phaseNum {
-					case 1:
-						tokens.PhaseName = "solve"
-					case 2:
-						tokens.PhaseName = "review"
-					case 3:
-						tokens.PhaseName = "fix"
-					case 4:
-						tokens.PhaseName = "pr"
-					default:
-						tokens.PhaseName = fmt.Sprintf("phase-%d", phaseNum)
-					}
-				}
-				result.Phases = append(result.Phases, tokens)
+			if err := json.Unmarshal(jsonBuf.Bytes(), &tokens); err != nil {
+				log.Printf("Warning: failed to parse phase %d token JSON: %v", phaseNum, err)
+				continue
 			}
+			tokens.PhaseNumber = phaseNum
+			if name, ok := phaseNames[phaseNum]; ok {
+				tokens.PhaseName = name
+			} else {
+				switch phaseNum {
+				case 1:
+					tokens.PhaseName = "solve"
+				case 2:
+					tokens.PhaseName = "review"
+				case 3:
+					tokens.PhaseName = "fix"
+				case 4:
+					tokens.PhaseName = "pr"
+				default:
+					tokens.PhaseName = fmt.Sprintf("phase-%d", phaseNum)
+				}
+			}
+			result.Phases = append(result.Phases, tokens)
 			continue
 		}
 	}

@@ -135,7 +135,7 @@ func (o *Orchestrator) scrapeNewJobRuns(ctx context.Context) error {
 		}
 
 		// Read real start/finish times from Prow metadata
-		startedAt, finishedAt := time.Now(), time.Now()
+		var startedAt, finishedAt time.Time
 		if data, err := o.gcs.ReadBuildFile(ctx, buildID, "started.json"); err == nil {
 			var ts prowTimestamp
 			if json.Unmarshal(data, &ts) == nil && ts.Timestamp > 0 {
