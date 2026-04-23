@@ -46,7 +46,7 @@ function applyCommentFilters() {
     if (severity && (c.severity || 'unclassified') !== severity) return false;
     if (topic && (c.topic || 'unclassified') !== topic) return false;
     if (author && c.author !== author) return false;
-    if (search && !c.body.toLowerCase().includes(search) && !c.author.toLowerCase().includes(search)) return false;
+    if (search && !(c.body || '').toLowerCase().includes(search) && !(c.author || '').toLowerCase().includes(search)) return false;
     return true;
   });
 

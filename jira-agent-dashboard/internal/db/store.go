@@ -482,15 +482,17 @@ func (s *Store) InsertOrUpdatePRComplexity(c *PRComplexity) error {
 // GetPRComplexityByIssueID retrieves PR complexity data for a given issue.
 func (s *Store) GetPRComplexityByIssueID(issueID int64) (*PRComplexity, error) {
 	row := s.db.QueryRow(
-		`SELECT id, issue_id, lines_added, lines_deleted, files_changed, cyclomatic_complexity_delta, cognitive_complexity_delta
+		`SELECT id, issue_id, lines_added, lines_deleted, files_changed, cyclomatic_complexity_delta, cognitive_complexity_delta, complexity_analyzed
 		 FROM pr_complexity WHERE issue_id = ?`, issueID,
 	)
 	var c PRComplexity
+	var analyzed int
 	err := row.Scan(&c.ID, &c.IssueID, &c.LinesAdded, &c.LinesDeleted, &c.FilesChanged,
-		&c.CyclomaticComplexityDelta, &c.CognitiveComplexityDelta)
+		&c.CyclomaticComplexityDelta, &c.CognitiveComplexityDelta, &analyzed)
 	if err != nil {
 		return nil, err
 	}
+	c.ComplexityAnalyzed = analyzed != 0
 	return &c, nil
 }
 
