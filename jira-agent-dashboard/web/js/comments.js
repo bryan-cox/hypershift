@@ -40,11 +40,13 @@ function applyCommentFilters() {
   const severity = document.getElementById('filter-severity').value;
   const topic = document.getElementById('filter-topic').value;
   const author = document.getElementById('filter-author').value;
+  const search = document.getElementById('filter-search').value.toLowerCase().trim();
 
   const filtered = allComments.filter(c => {
     if (severity && (c.severity || 'unclassified') !== severity) return false;
     if (topic && (c.topic || 'unclassified') !== topic) return false;
     if (author && c.author !== author) return false;
+    if (search && !c.body.toLowerCase().includes(search) && !c.author.toLowerCase().includes(search)) return false;
     return true;
   });
 
@@ -443,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('filter-severity').addEventListener('change', applyCommentFilters);
   document.getElementById('filter-topic').addEventListener('change', applyCommentFilters);
   document.getElementById('filter-author').addEventListener('change', applyCommentFilters);
+  document.getElementById('filter-search').addEventListener('input', applyCommentFilters);
   document.getElementById('download-report').addEventListener('click', downloadReport);
 
   applyRange('7d');

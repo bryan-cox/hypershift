@@ -838,12 +838,16 @@ td a:hover {
   flex-wrap: wrap;
 }
 
-.comment-filters select {
+.comment-filters select,
+.comment-filters input[type="text"] {
   padding: 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 0.85em;
   background: white;
+}
+
+.comment-filters select {
   cursor: pointer;
 }
 
