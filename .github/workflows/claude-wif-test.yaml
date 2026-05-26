@@ -1,0 +1,37 @@
+name: Test Claude Code WIF Auth
+on:
+  pull_request:
+    paths:
+      - .github/workflows/claude-wif-test.yaml
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test-wif:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Authenticate to GCP via WIF
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+        with:
+          project_id: hosted-control-planes
+          service_account: claude-gha@hosted-control-planes.iam.gserviceaccount.com
+          workload_identity_provider: projects/21066242673/locations/global/workloadIdentityPools/itpc-identity-pool/providers/github-com
+
+      - name: Install Claude Code
+        run: |
+          curl -fsSL https://claude.ai/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Test Claude Code
+        env:
+          CLAUDE_CODE_USE_VERTEX: "1"
+          CLOUD_ML_REGION: global
+          ANTHROPIC_VERTEX_PROJECT_ID: hosted-control-planes
+        run: |
+          claude --version
+          claude -p "Say hello in one sentence" --max-turns 1
