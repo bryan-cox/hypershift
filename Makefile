@@ -185,8 +185,6 @@ $(CRD_SCHEMA_CHECK): $(TOOLS_DIR)/go.mod # Build crd-schema-check tool
 
 .PHONY: generate
 generate: $(MOCKGEN)
-	@echo "Cleaning stale mock files..."
-	git clean -fx -- '*_mock.go'
 	$(GO) generate ./...
 
 # Compile all tests
@@ -660,13 +658,12 @@ $(PYYAML_STAMP): ## Install pyyaml for verify-docs-nav.
 ##@ codespell
 codespell : $(CODESPELL) ## Build a local copy of codespell.
 $(CODESPELL): ## Build codespell from tools folder.
-		mkdir -p $(TOOLS_BIN_DIR); \
 		mkdir -p $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR); \
-		mkdir -p $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR)/bin; \
-		mkdir -p $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR); \
-	 	python3 -m pip install --target=$(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR) $(CODESPELL_BIN)==$(CODESPELL_VER) --upgrade; \
-		mv $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR)/bin/$(CODESPELL_BIN) $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR); \
-		rm -r $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR)/bin;
+		python3 -m pip install --target=$(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR) $(CODESPELL_BIN)==$(CODESPELL_VER) --upgrade; \
+		if [ -f $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR)/bin/$(CODESPELL_BIN) ]; then \
+			mv $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR)/bin/$(CODESPELL_BIN) $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR)/; \
+			rm -rf $(TOOLS_BIN_DIR)/$(CODESPELL_DIST_DIR)/bin; \
+		fi
 
 ##@ gitlint
 gitlint : $(GITLINT) ## Install local copy of gitlint
