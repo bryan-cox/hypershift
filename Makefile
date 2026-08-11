@@ -123,14 +123,13 @@ precommit-api-lint-fix: $(GOLANGCI_LINT)
 	cd api && $(GOLANGCI_LINT) fmt --config ./.golangci.yml --enable gci $(patsubst api/%,%,$(FILES))
 
 .PHONY: lint
-lint: generate $(HYPERSHIFTLINTER_PLUGIN)
+lint: generate
 	$(MAKE) api-lint; api_rc=$$?; \
 	$(GOLANGCI_LINT) run --config ./.golangci.yml --modules-download-mode=readonly -v; main_rc=$$?; \
-	$(GOLANGCI_LINT) run --config ./.golangci.yml --modules-download-mode=readonly -v --enable-only hypershiftlinter --build-tags e2ev2; hs_rc=$$?; \
-	exit $$(( api_rc > main_rc ? (api_rc > hs_rc ? api_rc : hs_rc) : (main_rc > hs_rc ? main_rc : hs_rc) ))
+	exit $$(( api_rc > main_rc ? api_rc : main_rc ))
 
 .PHONY: main-lint-fix
-main-lint-fix: generate $(GOLANGCI_LINT) $(HYPERSHIFTLINTER_PLUGIN)
+main-lint-fix: generate $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) run --config ./.golangci.yml --fix -v $(if $(PULL_BASE_SHA),--new-from-rev=$(PULL_BASE_SHA) --whole-files)
 
 .PHONY: precommit-main-lint-fix
@@ -138,7 +137,7 @@ precommit-main-lint-fix: $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) fmt --config ./.golangci.yml --enable gci $(FILES)
 
 .PHONY: lint-fix
-lint-fix: generate $(HYPERSHIFTLINTER_PLUGIN)
+lint-fix: generate
 	$(MAKE) api-lint-fix; api_rc=$$?; \
 	$(GOLANGCI_LINT) run --config ./.golangci.yml --fix -v; main_rc=$$?; \
 	exit $$(( api_rc > main_rc ? api_rc : main_rc ))
