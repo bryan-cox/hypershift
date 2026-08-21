@@ -1,0 +1,20 @@
+name: Flaky Test Job
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  flaky:
+    name: Flaky
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless the marker file says otherwise
+        run: |
+          echo "Attempt: ${{ github.run_attempt }}"
+          if [ "${{ github.run_attempt }}" = "1" ]; then
+            echo "First attempt: failing on purpose."
+            exit 1
+          fi
+          echo "Rerun detected (attempt ${{ github.run_attempt }}): passing."
