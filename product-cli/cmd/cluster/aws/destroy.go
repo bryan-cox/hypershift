@@ -5,10 +5,16 @@ import (
 	"github.com/openshift/hypershift/cmd/cluster/core"
 	"github.com/openshift/hypershift/cmd/log"
 
+	crclient "sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/spf13/cobra"
 )
 
-func NewDestroyCommand(opts *core.DestroyOptions) *cobra.Command {
+func NewDestroyCommand(opts *core.DestroyOptions, clientProviders ...*core.ClientProvider) *cobra.Command {
+	clientProvider := core.DefaultClientProvider()
+	if len(clientProviders) > 0 && clientProviders[0] != nil {
+		clientProvider = clientProviders[0]
+	}
 	cmd := &cobra.Command{
 		Use:          "aws",
 		Short:        "Destroys a HostedCluster and its associated infrastructure on AWS",
@@ -30,12 +36,26 @@ func NewDestroyCommand(opts *core.DestroyOptions) *cobra.Command {
 	opts.AWSPlatform.Credentials.BindProductFlags(cmd.Flags())
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		err := hypershiftaws.ValidateProductCredentialInfo(opts.AWSPlatform.Credentials, opts.CredentialSecretName, opts.Namespace, opts.Kubeconfig)
+		var client crclient.Client
+		var err error
+		if opts.CredentialSecretName != "" {
+			client, err = clientProvider.ControllerRuntimeClientFor(opts.Kubeconfig)
+			if err != nil {
+				return err
+			}
+		}
+		err = hypershiftaws.ValidateProductCredentialInfo(opts.AWSPlatform.Credentials, opts.CredentialSecretName, opts.Namespace, client)
 		if err != nil {
 			return err
 		}
+		if client == nil {
+			client, err = clientProvider.ControllerRuntimeClientFor(opts.Kubeconfig)
+			if err != nil {
+				return err
+			}
+		}
 
-		if err = hypershiftaws.DestroyCluster(cmd.Context(), opts); err != nil {
+		if err = hypershiftaws.DestroyCluster(cmd.Context(), opts, client); err != nil {
 			log.Log.Error(err, "Failed to destroy cluster")
 			return err
 		}

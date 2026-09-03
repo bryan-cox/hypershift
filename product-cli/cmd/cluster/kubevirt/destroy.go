@@ -8,7 +8,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewDestroyCommand(opts *core.DestroyOptions) *cobra.Command {
+func NewDestroyCommand(opts *core.DestroyOptions, clientProviders ...*core.ClientProvider) *cobra.Command {
+	clientProvider := core.DefaultClientProvider()
+	if len(clientProviders) > 0 && clientProviders[0] != nil {
+		clientProvider = clientProviders[0]
+	}
 	cmd := &cobra.Command{
 		Use:          "kubevirt",
 		Short:        "Destroys a HostedCluster and its associated infrastructure on KubeVirt platform",
@@ -16,7 +20,11 @@ func NewDestroyCommand(opts *core.DestroyOptions) *cobra.Command {
 	}
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if err := none.DestroyCluster(cmd.Context(), opts); err != nil {
+		client, err := clientProvider.ControllerRuntimeClientFor(opts.Kubeconfig)
+		if err != nil {
+			return err
+		}
+		if err := none.DestroyCluster(cmd.Context(), opts, client); err != nil {
 			log.Log.Error(err, "Failed to destroy cluster")
 			return err
 		}

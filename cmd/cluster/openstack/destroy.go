@@ -12,10 +12,16 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/errors"
 
+	crclient "sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/spf13/cobra"
 )
 
-func NewDestroyCommand(opts *core.DestroyOptions) *cobra.Command {
+func NewDestroyCommand(opts *core.DestroyOptions, clientProviders ...*core.ClientProvider) *cobra.Command {
+	clientProvider := core.DefaultClientProvider()
+	if len(clientProviders) > 0 && clientProviders[0] != nil {
+		clientProvider = clientProviders[0]
+	}
 	cmd := &cobra.Command{
 		Use:          "openstack",
 		Short:        "Destroys a HostedCluster and its associated infrastructure on OpenStack",
@@ -34,7 +40,13 @@ func NewDestroyCommand(opts *core.DestroyOptions) *cobra.Command {
 			cancel()
 		}()
 
-		if err := DestroyCluster(ctx, opts); err != nil {
+		client, err := clientProvider.ControllerRuntimeClientFor(opts.Kubeconfig)
+		if err != nil {
+			logger.Error(err, "Failed to create management cluster client")
+			os.Exit(1)
+		}
+
+		if err := DestroyCluster(ctx, opts, client); err != nil {
 			logger.Error(err, "Failed to destroy cluster")
 			os.Exit(1)
 		}
@@ -42,8 +54,8 @@ func NewDestroyCommand(opts *core.DestroyOptions) *cobra.Command {
 
 	return cmd
 }
-func DestroyCluster(ctx context.Context, o *core.DestroyOptions) error {
-	hostedCluster, err := core.GetCluster(ctx, o)
+func DestroyCluster(ctx context.Context, o *core.DestroyOptions, client crclient.Client) error {
+	hostedCluster, err := core.GetCluster(ctx, client, o)
 	if err != nil {
 		return err
 	}
@@ -60,9 +72,9 @@ func DestroyCluster(ctx context.Context, o *core.DestroyOptions) error {
 		return fmt.Errorf("required inputs are missing: %w", err)
 	}
 
-	return core.DestroyCluster(ctx, hostedCluster, o, destroyPlatformSpecifics)
+	return core.DestroyCluster(ctx, client, hostedCluster, o, destroyPlatformSpecifics)
 }
 
-func destroyPlatformSpecifics(ctx context.Context, o *core.DestroyOptions) error {
+func destroyPlatformSpecifics(ctx context.Context, o *core.DestroyOptions, _ crclient.Client) error {
 	return nil
 }
