@@ -12,6 +12,7 @@ import (
 	"github.com/openshift/hypershift/cmd/cluster/core"
 	consolelogsaws "github.com/openshift/hypershift/cmd/consolelogs/aws"
 	"github.com/openshift/hypershift/cmd/infra/aws/util"
+	cmdutil "github.com/openshift/hypershift/cmd/util"
 	"github.com/openshift/hypershift/support/upsert"
 
 	"k8s.io/apimachinery/pkg/util/errors"
@@ -38,6 +39,10 @@ func DumpHostedCluster(ctx context.Context, t *testing.T, hc *hyperv1.HostedClus
 	}()
 
 	var allErrors []error
+	managementClient, err := cmdutil.GetClientWithKubeconfig("")
+	if err != nil {
+		return err
+	}
 	findKubeObjectUpdateLoops := func(filename string, content []byte) {
 		if bytes.Contains(content, []byte(upsert.LoopDetectorWarningMessage)) {
 			allErrors = append(allErrors, fmt.Errorf("found %s messages in file %s", upsert.LoopDetectorWarningMessage, filename))
@@ -51,6 +56,11 @@ func DumpHostedCluster(ctx context.Context, t *testing.T, hc *hyperv1.HostedClus
 		IsDumpingGuestCluster:    isDumpingGuestCluster,
 		DumpGuestClusterPolicies: dumpGuestClusterPolicies,
 		Log:                      zapr.NewLogger(dumpLogger),
+		Client:                   managementClient,
+		ClientProvider: &cmdutil.ClientProvider{
+			ControllerRuntimeClient: cmdutil.GetClientWithKubeconfig,
+			Config:                  cmdutil.GetConfigWithKubeconfig,
+		},
 	})
 	if err != nil {
 		allErrors = append(allErrors, fmt.Errorf("failed to dump cluster: %w", err))
@@ -67,7 +77,11 @@ func DumpMachineConsoleLogs(ctx context.Context, hc *hyperv1.HostedCluster, awsC
 		AWSCredentialsOpts: awsCredentials,
 		OutputDir:          filepath.Join(artifactDir, "machine-console-logs"),
 	}
-	err := consoleLogs.Run(ctx)
+	managementClient, err := cmdutil.GetClientWithKubeconfig("")
+	if err != nil {
+		return err
+	}
+	err = consoleLogs.Run(ctx, managementClient)
 	if err != nil {
 		return fmt.Errorf("failed to get machine console logs: %w", err)
 	}

@@ -3,11 +3,16 @@ package openstack
 import (
 	"github.com/openshift/hypershift/cmd/nodepool/core"
 	openstacknodepool "github.com/openshift/hypershift/cmd/nodepool/openstack"
+	"github.com/openshift/hypershift/cmd/util"
 
 	"github.com/spf13/cobra"
 )
 
-func NewCreateCommand(coreOpts *core.CreateNodePoolOptions) *cobra.Command {
+func NewCreateCommand(coreOpts *core.CreateNodePoolOptions, clientProviders ...*util.ClientProvider) *cobra.Command {
+	clientProvider := util.DefaultClientProvider()
+	if len(clientProviders) > 0 && clientProviders[0] != nil {
+		clientProvider = clientProviders[0]
+	}
 	platformOpts := openstacknodepool.DefaultOptions()
 	cmd := &cobra.Command{
 		Use:          "openstack",
@@ -26,7 +31,7 @@ func NewCreateCommand(coreOpts *core.CreateNodePoolOptions) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		return coreOpts.CreateRunFunc(opts)(cmd, args)
+		return coreOpts.CreateRunFunc(opts, clientProvider)(cmd, args)
 	}
 
 	return cmd

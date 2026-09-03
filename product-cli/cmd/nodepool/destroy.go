@@ -20,7 +20,11 @@ type DestroyNodePoolOptions struct {
 	Namespace string
 }
 
-func NewDestroyCommand() *cobra.Command {
+func NewDestroyCommand(clientProviders ...*util.ClientProvider) *cobra.Command {
+	clientProvider := util.DefaultClientProvider()
+	if len(clientProviders) > 0 && clientProviders[0] != nil {
+		clientProvider = clientProviders[0]
+	}
 	opts := &DestroyNodePoolOptions{
 		Namespace: "clusters",
 	}
@@ -37,18 +41,17 @@ func NewDestroyCommand() *cobra.Command {
 	_ = cmd.MarkFlagRequired("name")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return opts.Run(cmd.Context())
+		client, err := clientProvider.ControllerRuntimeClientFor("")
+		if err != nil {
+			return err
+		}
+		return opts.Run(cmd.Context(), client)
 	}
 
 	return cmd
 }
 
-func (o *DestroyNodePoolOptions) Run(ctx context.Context) error {
-	client, err := util.GetClient()
-	if err != nil {
-		return err
-	}
-
+func (o *DestroyNodePoolOptions) Run(ctx context.Context, client crclient.Client) error {
 	return o.run(ctx, client)
 }
 

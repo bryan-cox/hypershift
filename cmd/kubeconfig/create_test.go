@@ -210,3 +210,9 @@ func TestRewriteServerForPrivateCluster(t *testing.T) {
 		})
 	}
 }
+
+func TestRenderRequiresClient(t *testing.T) {
+	if err := Render(context.Background(), "clusters", "example", false, nil); err == nil {
+		t.Fatal("expected a missing client error")
+	}
+}

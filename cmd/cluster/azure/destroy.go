@@ -22,6 +22,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/errors"
 
+	crclient "sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +32,11 @@ const (
 	privateClusterGracePeriod = 20 * time.Minute
 )
 
-func NewDestroyCommand(opts *core.DestroyOptions) *cobra.Command {
+func NewDestroyCommand(opts *core.DestroyOptions, clientProviders ...*core.ClientProvider) *cobra.Command {
+	clientProvider := core.DefaultClientProvider()
+	if len(clientProviders) > 0 && clientProviders[0] != nil {
+		clientProvider = clientProviders[0]
+	}
 	cmd := &cobra.Command{
 		Use:          "azure",
 		Short:        "Destroys a HostedCluster and its associated infrastructure on Azure",
@@ -59,7 +65,13 @@ func NewDestroyCommand(opts *core.DestroyOptions) *cobra.Command {
 			cancel()
 		}()
 
-		if err := DestroyCluster(ctx, opts); err != nil {
+		client, err := clientProvider.ControllerRuntimeClientFor(opts.Kubeconfig)
+		if err != nil {
+			logger.Error(err, "Failed to create management cluster client")
+			os.Exit(1)
+		}
+
+		if err := DestroyCluster(ctx, opts, client); err != nil {
 			logger.Error(err, "Failed to destroy cluster")
 			os.Exit(1)
 		}
@@ -97,8 +109,8 @@ func applyHostedClusterToDestroyOptions(o *core.DestroyOptions, hostedCluster *h
 	return nil
 }
 
-func DestroyCluster(ctx context.Context, o *core.DestroyOptions) error {
-	hostedCluster, err := core.GetCluster(ctx, o)
+func DestroyCluster(ctx context.Context, o *core.DestroyOptions, client crclient.Client) error {
+	hostedCluster, err := core.GetCluster(ctx, client, o)
 	if err != nil {
 		return err
 	}
@@ -146,10 +158,10 @@ func DestroyCluster(ctx context.Context, o *core.DestroyOptions) error {
 		o.AzurePlatform.ResourceGroupName = o.Name + "-" + o.InfraID
 	}
 
-	return core.DestroyCluster(ctx, hostedCluster, o, destroyPlatformSpecifics)
+	return core.DestroyCluster(ctx, client, hostedCluster, o, destroyPlatformSpecifics)
 }
 
-func destroyPlatformSpecifics(ctx context.Context, o *core.DestroyOptions) error {
+func destroyPlatformSpecifics(ctx context.Context, o *core.DestroyOptions, _ crclient.Client) error {
 	// Clean up role assignments before destroying infrastructure to avoid orphans.
 	// Match the create path resource-group names: {name}-nsg and {name}-vnet.
 	subscriptionID, azureCreds, err := util.SetupAzureCredentials(o.Log, nil, o.AzurePlatform.CredentialsFile)

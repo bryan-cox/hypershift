@@ -34,9 +34,11 @@ func TestDestroyCluster(t *testing.T) {
 
 		platformSpecificsCalled := false
 		var receivedOpts *DestroyOptions
-		mockPlatformSpecifics := func(ctx context.Context, o *DestroyOptions) error {
+		var receivedClient client.Client
+		mockPlatformSpecifics := func(ctx context.Context, o *DestroyOptions, injectedClient client.Client) error {
 			platformSpecificsCalled = true
 			receivedOpts = o
+			receivedClient = injectedClient
 			return nil
 		}
 
@@ -59,13 +61,14 @@ func TestDestroyCluster(t *testing.T) {
 		g.Expect(platformSpecificsCalled).To(BeTrue())
 		g.Expect(receivedOpts).ToNot(BeNil())
 		g.Expect(receivedOpts.AzurePlatform.Cloud).To(Equal("AzurePublicCloud"))
+		g.Expect(receivedClient).To(Equal(c))
 	})
 
 	t.Run("When kubeconfig is set it should use it for the client", func(t *testing.T) {
 		g := NewGomegaWithT(t)
 
 		platformSpecificsCalled := false
-		mockPlatformSpecifics := func(ctx context.Context, o *DestroyOptions) error {
+		mockPlatformSpecifics := func(ctx context.Context, o *DestroyOptions, _ client.Client) error {
 			platformSpecificsCalled = true
 			return nil
 		}
@@ -105,7 +108,7 @@ func TestDestroyCluster(t *testing.T) {
 			"destroy finalizer should not be present before destroyCluster runs")
 
 		platformSpecificsCalled := false
-		mockPlatformSpecifics := func(ctx context.Context, o *DestroyOptions) error {
+		mockPlatformSpecifics := func(ctx context.Context, o *DestroyOptions, _ client.Client) error {
 			platformSpecificsCalled = true
 			return nil
 		}
@@ -149,7 +152,7 @@ func TestDestroyCluster(t *testing.T) {
 			Build()
 
 		platformSpecificsCalled := false
-		mockPlatformSpecifics := func(ctx context.Context, o *DestroyOptions) error {
+		mockPlatformSpecifics := func(ctx context.Context, o *DestroyOptions, _ client.Client) error {
 			platformSpecificsCalled = true
 			return nil
 		}
@@ -166,6 +169,34 @@ func TestDestroyCluster(t *testing.T) {
 		g.Expect(err).ToNot(HaveOccurred())
 		g.Expect(platformSpecificsCalled).To(BeTrue())
 	})
+}
+
+func TestPublicClusterLifecycleUsesInjectedClient(t *testing.T) {
+	g := NewGomegaWithT(t)
+	hostedCluster := &hyperv1.HostedCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "clusters",
+		},
+		Spec: hyperv1.HostedClusterSpec{InfraID: "test-infra"},
+	}
+	c := fake.NewClientBuilder().WithScheme(hyperapi.Scheme).WithObjects(hostedCluster).Build()
+	opts := &DestroyOptions{
+		ClusterGracePeriod: 1 * time.Second,
+		Name:               hostedCluster.Name,
+		Namespace:          hostedCluster.Namespace,
+		InfraID:            hostedCluster.Spec.InfraID,
+		Log:                log.Log,
+	}
+
+	found, err := GetCluster(t.Context(), c, opts)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(found.Name).To(Equal(hostedCluster.Name))
+
+	err = DestroyCluster(t.Context(), c, found, opts, nil)
+	g.Expect(err).NotTo(HaveOccurred())
+	err = c.Get(t.Context(), client.ObjectKeyFromObject(hostedCluster), &hyperv1.HostedCluster{})
+	g.Expect(apierrors.IsNotFound(err)).To(BeTrue())
 }
 
 func TestForceRemoveAllFinalizers(t *testing.T) {
@@ -520,7 +551,6 @@ func TestForceRemoveAllFinalizersErrors(t *testing.T) {
 func TestGetCluster(t *testing.T) {
 	t.Run("When kubeconfig is invalid it should return an error", func(t *testing.T) {
 		g := NewGomegaWithT(t)
-		t.Setenv("FAKE_CLIENT", "")
 
 		opts := &DestroyOptions{
 			Kubeconfig: "/nonexistent/kubeconfig",
@@ -528,7 +558,7 @@ func TestGetCluster(t *testing.T) {
 			Namespace:  "clusters",
 		}
 
-		_, err := GetCluster(context.Background(), opts)
+		_, err := GetCluster(context.Background(), nil, opts)
 		g.Expect(err).To(HaveOccurred())
 	})
 }
