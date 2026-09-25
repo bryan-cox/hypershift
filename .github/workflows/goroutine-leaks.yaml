@@ -1,0 +1,32 @@
+# Mirrors the focused shutdown/leak tests in kubernetes-sigs/controller-runtime/pkg/controller/controller_test.go.
+name: Goroutine Leaks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - release-4.22
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  leaks:
+    name: Goroutine Leaks
+    runs-on: arc-runner-set
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        env:
+          HOME: /tmp
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Generate test mocks
+        run: make generate
+      - name: Check autoscaler shutdown for goroutine leaks
+        run: GO111MODULE=on GOWORK=off GOFLAGS=-mod=vendor go test -race -count=1 -timeout=5m -run '^TestEnqueuePeriodicReconcile$' ./hypershift-operator/controllers/scheduler/aws

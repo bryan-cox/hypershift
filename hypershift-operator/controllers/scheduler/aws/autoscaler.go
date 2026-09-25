@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -310,15 +311,30 @@ func (r *RequestServingNodeAutoscaler) SetupWithManager(mgr ctrl.Manager) error 
 			MaxConcurrentReconciles: 1,
 		}).Named(autoscalerControllerName)
 
-	go func() {
+	if err := builder.Complete(r); err != nil {
+		return err
+	}
+	return mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
 		ticker := time.NewTicker(1 * time.Minute)
 		defer ticker.Stop()
-		for range ticker.C {
+		return enqueuePeriodicReconcile(ctx, ticker.C, tickerChannel)
+	}))
+}
+
+func enqueuePeriodicReconcile(ctx context.Context, ticks <-chan time.Time, events chan<- event.GenericEvent) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-ticks:
 			pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "ticker", Namespace: placeholderNamespace}}
-			tickerChannel <- event.GenericEvent{Object: pod}
+			select {
+			case events <- event.GenericEvent{Object: pod}:
+			case <-ctx.Done():
+				return nil
+			}
 		}
-	}()
-	return builder.Complete(r)
+	}
 }
 
 type machineSetsByName []machinev1beta1.MachineSet
