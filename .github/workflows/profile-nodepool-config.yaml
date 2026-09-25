@@ -1,0 +1,48 @@
+name: Profile NodePool Config Generation
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  profile:
+    name: Profile NodePool Config Generation
+    runs-on: arc-runner-set
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        env:
+          HOME: /tmp
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Generate test mocks
+        run: make generate
+      - name: Profile config generation and hashes
+        run: |
+          set -euo pipefail
+          mkdir -p profiles
+          go version > profiles/environment.txt
+          echo "Architecture: $(uname -m)" >> profiles/environment.txt
+          echo "Commit: $GITHUB_SHA" >> profiles/environment.txt
+          GO111MODULE=on GOWORK=off GOFLAGS=-mod=vendor go test \
+            -run '^$' -bench '^BenchmarkNewConfigGenerator$' \
+            -benchtime=5s -count=1 -benchmem -timeout=15m \
+            -cpuprofile=cpu.pprof -memprofile=mem.pprof -outputdir=profiles \
+            ./hypershift-operator/controllers/nodepool \
+            2>&1 | tee profiles/benchmark.txt
+          go tool pprof -top -nodecount=25 profiles/cpu.pprof > profiles/cpu-top.txt
+          go tool pprof -top -alloc_space -nodecount=25 profiles/mem.pprof > profiles/allocs-top.txt
+      - name: Upload profiles
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nodepool-config-profiles
+          path: profiles/
+          if-no-files-found: warn
+          retention-days: 7
