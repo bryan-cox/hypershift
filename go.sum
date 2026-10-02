@@ -1042,8 +1042,8 @@ sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.36.0 h1:/YpDJ4vReG7Zm
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.36.0/go.mod h1:tJo1aepTXyR+8Xs3sUsGBDk4Ub2AM5dPAPKJx0mpm5c=
 sigs.k8s.io/cluster-api v1.13.4 h1:27PPEKSqESKeUIf475Ga6hSW1+gKxd5V5sCmMDgeBDo=
 sigs.k8s.io/cluster-api v1.13.4/go.mod h1:suV3Ixu7yUMD651EtBULa/RtwHRxU30eojF3wifGe8Y=
-sigs.k8s.io/cluster-api-provider-aws/v2 v2.13.0 h1:yQz7GBrIkPLuEJ5MXNuZ/6eUssTJK8reUnZ6t5QIPnU=
-sigs.k8s.io/cluster-api-provider-aws/v2 v2.13.0/go.mod h1:V1Wjhe8+AJ5Exk8OXGYbYX/b81XKpVVLxPls4OQxl+E=
+sigs.k8s.io/cluster-api-provider-aws/v2 v2.13.1 h1:/IgIR9/m9rYj7CSTBWMm2Kn3EIKOpwK06GheYvhMFEc=
+sigs.k8s.io/cluster-api-provider-aws/v2 v2.13.1/go.mod h1:V1Wjhe8+AJ5Exk8OXGYbYX/b81XKpVVLxPls4OQxl+E=
 sigs.k8s.io/cluster-api-provider-azure v1.26.0 h1:r8j3FPec1GZ9SMx0f2Z9Pd0qXYu+qUOfR0U/TTgZ+6w=
 sigs.k8s.io/cluster-api-provider-azure v1.26.0/go.mod h1:mM4dXaUuTw0I5ko1xZIGxRKDBTQPKOg56rNwfDKyLWc=
 sigs.k8s.io/cluster-api-provider-gcp v1.13.1 h1:l4zdwsHFwcA8CP5P4NPar9fUu5kMwucKhp2IQBHduJs=
@@ -1054,8 +1054,8 @@ sigs.k8s.io/cluster-api-provider-kubevirt v0.11.2 h1:+DyQP1xvAD34Cce/5efG1sJFwJZ
 sigs.k8s.io/cluster-api-provider-kubevirt v0.11.2/go.mod h1:so1WRGRRsxT4lqS0htpUqXrXLy0guBklh9UPVxoilLY=
 sigs.k8s.io/cluster-api-provider-openstack v0.14.8 h1:I6N8u0DV9TcBaZmbwHs4DPrctLhmOtK+QtLMq/bgL+k=
 sigs.k8s.io/cluster-api-provider-openstack v0.14.8/go.mod h1:cwkIi1EB+TH5tW8Rue9PLoqoqTm5Vp9Mxs1aLJmcVvo=
-sigs.k8s.io/controller-runtime v0.25.0 h1:44KgRUPew331KSJpNu8zJow3iTR5W0p/SfrHdw3lV40=
-sigs.k8s.io/controller-runtime v0.25.0/go.mod h1:4QqLdT6z/L6Olj8JJCtvztid4/fnIiYsfaTFScegctc=
+sigs.k8s.io/controller-runtime v0.25.1 h1:BKgU9OeE8xv8EbbM8cY0NVzTQs35rokkdq1jh12fMb4=
+sigs.k8s.io/controller-runtime v0.25.1/go.mod h1:4QqLdT6z/L6Olj8JJCtvztid4/fnIiYsfaTFScegctc=
 sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6/go.mod h1:p4QtZmO4uMYipTQNzagwnNoseA6OxSUutVw05NhYDRs=
 sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 h1:IpInykpT6ceI+QxKBbEflcR5EXP7sU1kvOlxwZh5txg=
 sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730/go.mod h1:mdzfpAEoE6DHQEN0uh9ZbOCuHbLK5wOm7dK4ctXE9Tg=
