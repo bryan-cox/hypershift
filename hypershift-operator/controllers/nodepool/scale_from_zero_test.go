@@ -158,8 +158,8 @@ func TestReconcileScaleFromZeroAnnotations(t *testing.T) {
 					AutoScaling: &hyperv1.NodePoolAutoScaling{Min: ptr.To[int32](0), Max: 1},
 					Platform:    hyperv1.NodePoolPlatform{Type: tc.platform},
 					Management:  hyperv1.NodePoolManagement{UpgradeType: tc.upgradeType},
-					NodeLabels:  map[string]string{"workload": "envoy", "kubernetes.io/arch": "amd64"},
-					Taints:      []hyperv1.Taint{{Key: "dedicated", Value: "envoy", Effect: corev1.TaintEffectNoSchedule}},
+					NodeLabels:  map[string]string{"workload": "workload", "kubernetes.io/arch": "amd64"},
+					Taints:      []hyperv1.Taint{{Key: "dedicated", Value: "workload", Effect: corev1.TaintEffectNoSchedule}},
 				},
 			}
 			hcp := &hyperv1.HostedControlPlane{
@@ -244,7 +244,7 @@ func TestReconcileScaleFromZeroAnnotations(t *testing.T) {
 			nodeLabels, err := labels.ConvertSelectorToLabelsMap(actual.GetAnnotations()[labelsKey])
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(nodeLabels).To(HaveKeyWithValue(corev1.LabelArchStable, "arm64"))
-			g.Expect(nodeLabels).To(HaveKeyWithValue("workload", "envoy"))
+			g.Expect(nodeLabels).To(HaveKeyWithValue("workload", "workload"))
 			if tc.discoverTopology {
 				g.Expect(nodeLabels).To(HaveKeyWithValue(corev1.LabelTopologyZone, "eu-central-1b"))
 				g.Expect(nodeLabels).To(HaveKeyWithValue(corev1.LabelTopologyRegion, "eu-central-1"))
@@ -450,8 +450,8 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 			name:     "When Azure supplies native capacity and node info, it should keep scheduling metadata without capacity discovery",
 			provider: &mockProvider{err: fmt.Errorf("capacity provider must not be queried")},
 			nodePool: &hyperv1.NodePool{Spec: hyperv1.NodePoolSpec{
-				Arch: "amd64", NodeLabels: map[string]string{"workload": "envoy"},
-				Taints: []hyperv1.Taint{{Key: "dedicated", Value: "envoy", Effect: corev1.TaintEffectNoSchedule}},
+				Arch: "amd64", NodeLabels: map[string]string{"workload": "workload"},
+				Taints: []hyperv1.Taint{{Key: "dedicated", Value: "workload", Effect: corev1.TaintEffectNoSchedule}},
 			}},
 			object: &capiv1.MachineDeployment{},
 			machineTemplate: &capiazure.AzureMachineTemplate{
@@ -487,7 +487,7 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 			nodePool: &hyperv1.NodePool{Spec: hyperv1.NodePoolSpec{
 				Arch: "amd64",
 				NodeLabels: map[string]string{
-					"workload":                                 "envoy",
+					"workload":                                 "workload",
 					"topology.kubernetes.io/zone":              "eu-central-1a",
 					"topology.k8s.aws/zone-id":                 "euc1-az1",
 					"failure-domain.beta.kubernetes.io/region": "us-east-1",
@@ -554,9 +554,9 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 			nodePool: &hyperv1.NodePool{
 				Spec: hyperv1.NodePoolSpec{
 					Arch:       "amd64",
-					NodeLabels: map[string]string{"workload": "envoy"},
+					NodeLabels: map[string]string{"workload": "workload"},
 					Taints: []hyperv1.Taint{
-						{Key: "dedicated", Value: "envoy", Effect: corev1.TaintEffectNoSchedule},
+						{Key: "dedicated", Value: "workload", Effect: corev1.TaintEffectNoSchedule},
 					},
 				},
 			},

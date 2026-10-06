@@ -56,8 +56,8 @@ func TestReconcile(t *testing.T) {
 				Management: hyperv1.NodePoolManagement{UpgradeType: hyperv1.UpgradeTypeReplace, Replace: &hyperv1.ReplaceUpgrade{
 					Strategy: hyperv1.UpgradeStrategyOnDelete,
 				}},
-				NodeLabels: map[string]string{"workload": "envoy"},
-				Taints:     []hyperv1.Taint{{Key: "dedicated", Value: "envoy", Effect: corev1.TaintEffectNoSchedule}},
+				NodeLabels: map[string]string{"workload": "workload"},
+				Taints:     []hyperv1.Taint{{Key: "dedicated", Value: "workload", Effect: corev1.TaintEffectNoSchedule}},
 			},
 		}
 		ca := ignitionserver.IgnitionCACertSecret("clusters-zone-check")
