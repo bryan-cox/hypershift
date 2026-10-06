@@ -9,14 +9,19 @@ import (
 
 	hyperv1 "github.com/openshift/hypershift/api/hypershift/v1beta1"
 	"github.com/openshift/hypershift/hypershift-operator/controllers/nodepool/instancetype"
+	"github.com/openshift/hypershift/support/api"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/utils/ptr"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-aws/v2/api/v1beta2"
 	capiazure "sigs.k8s.io/cluster-api-provider-azure/api/v1beta1"
 	capiv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 type mockProvider struct {
@@ -26,6 +31,136 @@ type mockProvider struct {
 
 func (m *mockProvider) GetInstanceTypeInfo(_ context.Context, _ string) (*instancetype.InstanceTypeInfo, error) {
 	return m.info, m.err
+}
+
+type schedulingMetadataClient struct {
+	client.Client
+	getErr   error
+	patchErr error
+}
+
+func (c *schedulingMetadataClient) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
+	if c.getErr != nil {
+		return c.getErr
+	}
+	return c.Client.Get(ctx, key, obj, opts...)
+}
+
+func (c *schedulingMetadataClient) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
+	if c.patchErr != nil {
+		return c.patchErr
+	}
+	return c.Client.Patch(ctx, obj, patch, opts...)
+}
+
+func TestReconcileScaleFromZeroAnnotations(t *testing.T) {
+	tests := []struct {
+		name             string
+		upgradeType      hyperv1.UpgradeType
+		platform         hyperv1.PlatformType
+		disabled         bool
+		missingTemplate  bool
+		noNativeCapacity bool
+		getErr, patchErr error
+		provider         instancetype.Provider
+		providerPlatform hyperv1.PlatformType
+		expectedError    string
+	}{
+		{name: "When Replace uses native capacity without a legacy provider, it should reconcile NodePool labels and taints", upgradeType: hyperv1.UpgradeTypeReplace, platform: hyperv1.AWSPlatform},
+		{name: "When InPlace uses native capacity without a legacy provider, it should reconcile NodePool labels and taints", upgradeType: hyperv1.UpgradeTypeInPlace, platform: hyperv1.AWSPlatform},
+		{name: "When Azure has native capacity, it should reconcile NodePool labels and taints", upgradeType: hyperv1.UpgradeTypeReplace, platform: hyperv1.AzurePlatform},
+		{name: "When a different platform's provider is configured without native capacity, it should not query that provider", upgradeType: hyperv1.UpgradeTypeReplace, platform: hyperv1.AzurePlatform, noNativeCapacity: true, providerPlatform: hyperv1.AWSPlatform, provider: &mockProvider{err: fmt.Errorf("wrong provider must not be queried")}},
+		{name: "When autoscaling is disabled, it should leave metadata untouched", upgradeType: hyperv1.UpgradeTypeReplace, platform: hyperv1.AWSPlatform, disabled: true},
+		{name: "When the platform is unsupported, it should leave metadata untouched", upgradeType: hyperv1.UpgradeTypeReplace, platform: hyperv1.OpenStackPlatform},
+		{name: "When the machine template is not yet present, it should wait without modifying metadata", upgradeType: hyperv1.UpgradeTypeReplace, platform: hyperv1.AWSPlatform, missingTemplate: true},
+		{name: "When reading CAPI resources fails, it should return a retryable error", upgradeType: hyperv1.UpgradeTypeReplace, platform: hyperv1.AWSPlatform, getErr: fmt.Errorf("read unavailable"), expectedError: "read unavailable"},
+		{name: "When patching scheduling metadata fails, it should return a retryable error", upgradeType: hyperv1.UpgradeTypeInPlace, platform: hyperv1.AWSPlatform, patchErr: fmt.Errorf("write conflict"), expectedError: "write conflict"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			g := NewWithT(t)
+			np := &hyperv1.NodePool{
+				ObjectMeta: metav1.ObjectMeta{Name: "workers", Namespace: "clusters"},
+				Spec: hyperv1.NodePoolSpec{
+					Arch: "arm64", Platform: hyperv1.NodePoolPlatform{Type: tc.platform},
+					AutoScaling: &hyperv1.NodePoolAutoScaling{Min: ptr.To[int32](0), Max: 1},
+					Management:  hyperv1.NodePoolManagement{UpgradeType: tc.upgradeType},
+					NodeLabels:  map[string]string{"workload": "workload", "topology.kubernetes.io/zone": "eu-central-1b"},
+					Taints:      []hyperv1.Taint{{Key: "dedicated", Value: "workload", Effect: corev1.TaintEffectNoSchedule}},
+				},
+			}
+			if tc.disabled {
+				np.Spec.AutoScaling = nil
+			}
+			metadata := metav1.ObjectMeta{Name: "workers-template", Namespace: "clusters-zone-check"}
+			capacity := corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("4"), corev1.ResourceMemory: resource.MustParse("16Gi")}
+			if tc.noNativeCapacity {
+				capacity = nil
+			}
+			var template client.Object = &infrav1.AWSMachineTemplate{ObjectMeta: metadata, Status: infrav1.AWSMachineTemplateStatus{Capacity: capacity}}
+			if tc.platform == hyperv1.AzurePlatform {
+				template = &capiazure.AzureMachineTemplate{ObjectMeta: metadata, Status: capiazure.AzureMachineTemplateStatus{Capacity: capacity}}
+			}
+			objectMeta := metav1.ObjectMeta{Name: np.Name, Namespace: metadata.Namespace, Annotations: map[string]string{
+				labelsKey: "stale=old", taintsKey: "stale=old:NoSchedule", cpuKey: "1", memoryKey: "1024", gpuKey: "2", "custom.io/keep": "preserved",
+			}}
+			machineTemplate := capiv1.MachineTemplateSpec{Spec: capiv1.MachineSpec{
+				Version: "4.22.15", InfrastructureRef: capiv1.ContractVersionedObjectReference{Name: template.GetName()},
+				Bootstrap: capiv1.Bootstrap{DataSecretName: ptr.To("workers-existing-user-data")},
+			}}
+			var object client.Object = &capiv1.MachineDeployment{ObjectMeta: objectMeta, Spec: capiv1.MachineDeploymentSpec{Template: machineTemplate, Replicas: ptr.To[int32](0)}}
+			if tc.upgradeType == hyperv1.UpgradeTypeInPlace {
+				object = &capiv1.MachineSet{ObjectMeta: objectMeta, Spec: capiv1.MachineSetSpec{Template: machineTemplate, Replicas: ptr.To[int32](0)}}
+			}
+			objects := []client.Object{object}
+			if !tc.missingTemplate {
+				objects = append(objects, template)
+			}
+			c := fake.NewClientBuilder().WithScheme(api.Scheme).WithObjects(objects...).Build()
+			capi := &CAPI{Token: &Token{ConfigGenerator: &ConfigGenerator{
+				Client: &schedulingMetadataClient{Client: c, getErr: tc.getErr, patchErr: tc.patchErr}, nodePool: np, controlplaneNamespace: metadata.Namespace,
+			}}}
+			r := &NodePoolReconciler{InstanceTypeProvider: tc.provider, ScaleFromZeroPlatform: tc.providerPlatform}
+			err := r.reconcileScaleFromZeroAnnotations(t.Context(), np, capi)
+			if tc.expectedError != "" {
+				g.Expect(err).To(MatchError(ContainSubstring(tc.expectedError)))
+			} else {
+				g.Expect(err).ToNot(HaveOccurred())
+			}
+			actual := object.DeepCopyObject().(client.Object)
+			g.Expect(c.Get(t.Context(), client.ObjectKeyFromObject(object), actual)).To(Succeed())
+			if tc.disabled || tc.platform == hyperv1.OpenStackPlatform || tc.missingTemplate || tc.expectedError != "" {
+				g.Expect(actual.GetAnnotations()).To(Equal(object.GetAnnotations()))
+				return
+			}
+			g.Expect(actual.GetAnnotations()).To(HaveKeyWithValue(labelsKey, "kubernetes.io/arch=arm64,topology.kubernetes.io/zone=eu-central-1b,workload=workload"))
+			g.Expect(actual.GetAnnotations()).To(HaveKeyWithValue(taintsKey, "dedicated=workload:NoSchedule"))
+			g.Expect(actual.GetAnnotations()).To(HaveKeyWithValue("custom.io/keep", "preserved"))
+			if !tc.noNativeCapacity {
+				for _, key := range []string{cpuKey, memoryKey, gpuKey} {
+					g.Expect(actual.GetAnnotations()).ToNot(HaveKey(key))
+				}
+			} else {
+				g.Expect(actual.GetAnnotations()).To(HaveKeyWithValue(cpuKey, "1"))
+			}
+			switch actual := actual.(type) {
+			case *capiv1.MachineDeployment:
+				g.Expect(actual.Spec).To(Equal(object.(*capiv1.MachineDeployment).Spec))
+			case *capiv1.MachineSet:
+				g.Expect(actual.Spec).To(Equal(object.(*capiv1.MachineSet).Spec))
+			}
+			resourceVersion := actual.GetResourceVersion()
+			g.Expect(r.reconcileScaleFromZeroAnnotations(t.Context(), np, capi)).To(Succeed())
+			g.Expect(c.Get(t.Context(), client.ObjectKeyFromObject(object), actual)).To(Succeed())
+			g.Expect(actual.GetResourceVersion()).To(Equal(resourceVersion), "unchanged metadata must not cause another write")
+			np.Spec.NodeLabels = map[string]string{"updated": "true"}
+			np.Spec.Taints = nil
+			g.Expect(r.reconcileScaleFromZeroAnnotations(t.Context(), np, capi)).To(Succeed())
+			g.Expect(c.Get(t.Context(), client.ObjectKeyFromObject(object), actual)).To(Succeed())
+			g.Expect(actual.GetAnnotations()).To(HaveKeyWithValue(labelsKey, "kubernetes.io/arch=arm64,updated=true"))
+			g.Expect(actual.GetAnnotations()).ToNot(HaveKey(taintsKey))
+		})
+	}
 }
 
 func TestTaintsToAnnotation(t *testing.T) {
@@ -112,6 +247,69 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 		validate        func(g Gomega, md *capiv1.MachineDeployment)
 	}{
 		{
+			name: "When all zonal and custom labels are supplied on the NodePool with native capacity, it should advertise them without discovering AWS topology",
+			nodePool: &hyperv1.NodePool{Spec: hyperv1.NodePoolSpec{
+				Arch: "amd64",
+				NodeLabels: map[string]string{
+					"failure-domain.beta.kubernetes.io/region": "eu-central-1",
+					"failure-domain.beta.kubernetes.io/zone":   "eu-central-1b",
+					"topology.kubernetes.io/region":            "eu-central-1",
+					"topology.kubernetes.io/zone":              "eu-central-1b",
+					"topology.ebs.csi.aws.com/zone":            "eu-central-1b",
+					"topology.k8s.aws/zone-id":                 "euc1-az3",
+					"workload":                                 "workload",
+				},
+			}},
+			object: &capiv1.MachineDeployment{},
+			machineTemplate: &infrav1.AWSMachineTemplate{Status: infrav1.AWSMachineTemplateStatus{
+				Capacity: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("96"), corev1.ResourceMemory: resource.MustParse("192Gi")},
+			}},
+			validate: func(g Gomega, md *capiv1.MachineDeployment) {
+				nodeLabels, err := labels.ConvertSelectorToLabelsMap(md.Annotations[labelsKey])
+				g.Expect(err).ToNot(HaveOccurred())
+				g.Expect(nodeLabels).To(Equal(labels.Set{
+					"kubernetes.io/arch":                       "amd64",
+					"failure-domain.beta.kubernetes.io/region": "eu-central-1",
+					"failure-domain.beta.kubernetes.io/zone":   "eu-central-1b",
+					"topology.kubernetes.io/region":            "eu-central-1",
+					"topology.kubernetes.io/zone":              "eu-central-1b",
+					"topology.ebs.csi.aws.com/zone":            "eu-central-1b",
+					"topology.k8s.aws/zone-id":                 "euc1-az3",
+					"workload":                                 "workload",
+				}))
+			},
+		},
+		{
+			name:     "When Azure supplies native node architecture, it should keep labels and taints without querying a legacy provider",
+			provider: &mockProvider{err: fmt.Errorf("provider must not be queried")},
+			nodePool: &hyperv1.NodePool{Spec: hyperv1.NodePoolSpec{
+				Arch: "amd64", NodeLabels: map[string]string{"workload": "workload", "kubernetes.io/arch": "amd64"},
+				Taints: []hyperv1.Taint{{Key: "dedicated", Value: "workload", Effect: corev1.TaintEffectNoSchedule}},
+			}},
+			object: &capiv1.MachineDeployment{},
+			machineTemplate: &capiazure.AzureMachineTemplate{Status: capiazure.AzureMachineTemplateStatus{
+				Capacity: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("4"), corev1.ResourceMemory: resource.MustParse("16Gi")},
+				NodeInfo: &capiazure.NodeInfo{Architecture: capiazure.ArchitectureArm64},
+			}},
+			validate: func(g Gomega, md *capiv1.MachineDeployment) {
+				g.Expect(md.Annotations).To(HaveKeyWithValue(labelsKey, "kubernetes.io/arch=arm64,workload=workload"))
+				g.Expect(md.Annotations).To(HaveKeyWithValue(taintsKey, "dedicated=workload:NoSchedule"))
+			},
+		},
+		{
+			name:     "When AWS supplies native node architecture, it should prefer that architecture without querying a legacy provider",
+			provider: &mockProvider{err: fmt.Errorf("provider must not be queried")},
+			nodePool: &hyperv1.NodePool{Spec: hyperv1.NodePoolSpec{Arch: "amd64"}},
+			object:   &capiv1.MachineDeployment{},
+			machineTemplate: &infrav1.AWSMachineTemplate{Status: infrav1.AWSMachineTemplateStatus{
+				Capacity: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("4"), corev1.ResourceMemory: resource.MustParse("16Gi")},
+				NodeInfo: &infrav1.NodeInfo{Architecture: infrav1.ArchitectureArm64},
+			}},
+			validate: func(g Gomega, md *capiv1.MachineDeployment) {
+				g.Expect(md.Annotations).To(HaveKeyWithValue(labelsKey, "kubernetes.io/arch=arm64"))
+			},
+		},
+		{
 			name:            "When machine template is an unsupported type, it should return an error",
 			provider:        &mockProvider{},
 			nodePool:        &hyperv1.NodePool{},
@@ -139,9 +337,16 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 			errSubstring:    "failed to describe instance type",
 		},
 		{
-			name:     "When Status.Capacity is already provided, it should remove scale-from-zero annotations",
-			provider: &mockProvider{},
-			nodePool: &hyperv1.NodePool{},
+			name:     "When native capacity is available, it should reconcile NodePool labels and taints without querying the capacity provider",
+			provider: &mockProvider{err: fmt.Errorf("capacity provider must not be queried")},
+			nodePool: &hyperv1.NodePool{Spec: hyperv1.NodePoolSpec{
+				Arch: "amd64",
+				NodeLabels: map[string]string{
+					"topology.kubernetes.io/zone": "eu-central-1b",
+					"workload":                    "workload",
+				},
+				Taints: []hyperv1.Taint{{Key: "dedicated", Value: "workload", Effect: corev1.TaintEffectNoSchedule}},
+			}},
 			object: &capiv1.MachineDeployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -169,14 +374,16 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 			expectErr: false,
 			validate: func(g Gomega, md *capiv1.MachineDeployment) {
 				a := md.GetAnnotations()
-				for _, k := range []string{cpuKey, memoryKey, gpuKey, labelsKey, taintsKey} {
+				for _, k := range []string{cpuKey, memoryKey, gpuKey} {
 					g.Expect(a).ToNot(HaveKey(k))
 				}
+				g.Expect(a).To(HaveKeyWithValue(labelsKey, "kubernetes.io/arch=amd64,topology.kubernetes.io/zone=eu-central-1b,workload=workload"))
+				g.Expect(a).To(HaveKeyWithValue(taintsKey, "dedicated=workload:NoSchedule"))
 				g.Expect(a).To(HaveKeyWithValue("custom.io/keep", "preserved"))
 			},
 		},
 		{
-			name:            "When provider is nil, it should return nil without setting annotations",
+			name:            "When provider is nil, it should set scheduling metadata without adding capacity annotations",
 			provider:        nil,
 			nodePool:        &hyperv1.NodePool{},
 			object:          &capiv1.MachineDeployment{},
@@ -184,6 +391,7 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 			expectErr:       false,
 			validate: func(g Gomega, md *capiv1.MachineDeployment) {
 				g.Expect(md.GetAnnotations()).ToNot(HaveKey(cpuKey))
+				g.Expect(md.GetAnnotations()).To(HaveKeyWithValue(labelsKey, "kubernetes.io/arch=amd64"))
 			},
 		},
 		{
@@ -238,7 +446,7 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 			errSubstring:    "instanceType is empty",
 		},
 		{
-			name:            "When Azure template with nil provider, it should skip annotations",
+			name:            "When Azure has no legacy provider, it should set scheduling metadata without adding capacity annotations",
 			provider:        nil,
 			nodePool:        &hyperv1.NodePool{},
 			object:          &capiv1.MachineDeployment{},
@@ -246,6 +454,7 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 			expectErr:       false,
 			validate: func(g Gomega, md *capiv1.MachineDeployment) {
 				g.Expect(md.GetAnnotations()).ToNot(HaveKey(cpuKey))
+				g.Expect(md.GetAnnotations()).To(HaveKeyWithValue(labelsKey, "kubernetes.io/arch=amd64"))
 			},
 		},
 		{
@@ -309,10 +518,12 @@ func TestSetScaleFromZeroAnnotationsOnObject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := NewGomegaWithT(t)
-			err := setScaleFromZeroAnnotationsOnObject(context.Background(), tt.provider, tt.nodePool, tt.object, tt.machineTemplate)
+			original := tt.object.DeepCopy()
+			err := setScaleFromZeroAnnotationsOnObject(t.Context(), tt.provider, tt.nodePool, tt.object, tt.machineTemplate)
 			if tt.expectErr {
 				g.Expect(err).To(HaveOccurred())
 				g.Expect(err.Error()).To(ContainSubstring(tt.errSubstring))
+				g.Expect(tt.object.Annotations).To(Equal(original.Annotations))
 			} else {
 				g.Expect(err).ToNot(HaveOccurred())
 				if tt.validate != nil {
