@@ -900,19 +900,21 @@ def compute_milestones(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
         for name in VALIDATION_CONDITIONS
         if condition_is(hc_conditions, name, "False")
     ]
-    missing_validation = [
-        name for name in REQUIRED_VALIDATION_CONDITIONS if name not in hc_conditions
+    pending_validation = [
+        condition_detail(hc_conditions, name)
+        for name in REQUIRED_VALIDATION_CONDITIONS
+        if not condition_is(hc_conditions, name, "True")
     ]
     milestones["validation_passed"] = result(
-        not blocking_validation and not missing_validation,
+        not blocking_validation and not pending_validation,
         latest_condition_time(hc_conditions, REQUIRED_VALIDATION_CONDITIONS),
         source="HostedCluster validation conditions",
         timing_basis="condition transition",
         detail=(
             "blocking conditions: " + "; ".join(blocking_validation)
             if blocking_validation
-            else "missing conditions: " + ", ".join(missing_validation)
-            if missing_validation
+            else "required conditions not true: " + "; ".join(pending_validation)
+            if pending_validation
             else "all required validation conditions are true"
         ),
     )
@@ -1243,19 +1245,20 @@ def compute_milestones(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
                     failed_operators.append(
                         f"{operator.get('name')}: {condition_detail(conditions, 'Available')}"
                     )
-                if condition_is(conditions, "Progressing", "True"):
+                if not condition_is(conditions, "Progressing", "False"):
                     failed_operators.append(
                         f"{operator.get('name')}: {condition_detail(conditions, 'Progressing')}"
                     )
-                if condition_is(conditions, "Degraded", "True"):
+                if not condition_is(conditions, "Degraded", "False"):
                     failed_operators.append(
                         f"{operator.get('name')}: {condition_detail(conditions, 'Degraded')}"
                     )
             operator_times = []
             for operator in operators:
                 timestamp = parse_timestamp(
-                    ((operator.get("conditions") or {}).get("Available") or {}).get(
-                        "lastTransitionTime"
+                    latest_condition_time(
+                        operator.get("conditions") or {},
+                        ("Available", "Progressing", "Degraded"),
                     )
                 )
                 if timestamp:
@@ -1278,14 +1281,8 @@ def compute_milestones(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
             detail="guest kubeconfig not supplied",
         )
 
-    completion_inputs = [
-        "hostedcluster_available",
-        "hostedcontrolplane_available",
-        "control_plane_rollout_complete",
-        "kernel_placeholder",
-    ]
-    del completion_inputs
     full_inputs = (
+        "validation_passed",
         "hostedcluster_available",
         "hostedcontrolplane_available",
         "control_plane_rollout_complete",

@@ -311,6 +311,41 @@ class ClusterStartupTimelineTest(unittest.TestCase):
         self.assertFalse(milestones["nodepool_ready"]["reached"])
         self.assertIn("status.version is not populated", milestones["nodepool_ready"]["detail"])
 
+    def test_full_completion_requires_validation_and_explicit_operator_convergence(self) -> None:
+        snapshot = self.collect(fixture())
+        healthy = {
+            "Available": condition("Available"),
+            "Progressing": condition("Progressing", "False", "2026-01-01T00:50:00Z"),
+            "Degraded": condition("Degraded", "False"),
+        }
+        snapshot["guest"] = {
+            "enabled": True,
+            "clusterVersion": {
+                "conditions": dict(healthy, Failing=condition("Failing", "False")),
+                "history": [{"state": "Completed", "completionTime": "2026-01-01T00:45:00Z"}],
+            },
+            "clusterOperators": [{"name": "network", "conditions": healthy}],
+        }
+        milestones = timeline.compute_milestones(snapshot)
+        self.assertTrue(milestones["fully_complete"]["reached"])
+        self.assertEqual(milestones["guest_operators_converged"]["timestamp"], "2026-01-01T00:50:00Z")
+
+        snapshot["hostedCluster"]["conditions"]["ValidReleaseImage"] = condition("ValidReleaseImage", "Unknown")
+        self.assertFalse(timeline.compute_milestones(snapshot)["fully_complete"]["reached"])
+        snapshot["hostedCluster"]["conditions"]["ValidReleaseImage"] = condition("ValidReleaseImage")
+
+        snapshot["hostedCluster"]["conditions"]["ValidOIDCConfiguration"] = condition("ValidOIDCConfiguration", "False")
+        self.assertFalse(timeline.compute_milestones(snapshot)["fully_complete"]["reached"])
+        del snapshot["hostedCluster"]["conditions"]["ValidOIDCConfiguration"]
+
+        for name in ("Progressing", "Degraded"):
+            with self.subTest(condition=name):
+                healthy[name] = condition(name, "Unknown")
+                self.assertFalse(timeline.compute_milestones(snapshot)["fully_complete"]["reached"])
+                del healthy[name]
+                self.assertFalse(timeline.compute_milestones(snapshot)["fully_complete"]["reached"])
+                healthy[name] = condition(name, "False")
+
     def test_once_writes_output_files(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             output_dir = Path(temporary_directory) / "trace"
