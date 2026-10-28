@@ -402,6 +402,7 @@ nav:
     - 'Adding E2E Tests': reference/ho-release-gating/extending-tests.md
     - 'Extending to Other Services': reference/ho-release-gating/extending-services.md
     - 'Operations and Troubleshooting': reference/ho-release-gating/troubleshooting.md
+  - 'Hosted Cluster Startup Roadmap': reference/cluster-startup-roadmap.md
   - "Infrastructure":
     - reference/infrastructure/index.md
     - "AWS": reference/infrastructure/aws.md

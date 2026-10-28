@@ -1,5 +1,9 @@
 # Cluster Lifecycle and Control Plane
 
+> **See also**: [Hosted Cluster Startup Roadmap](../../reference/cluster-startup-roadmap.md)
+> for the stage-by-stage order of operations, readiness gates, and debugging
+> decision tree used when a new HostedCluster is starting.
+
 ---
 
 ## HostedCluster Lifecycle
@@ -158,28 +162,31 @@ flowchart TD
 
 ```mermaid
 graph TD
-    PKI[PKI Operator] --> |no deps| READY1((Ready))
-    ETCD[etcd] --> |no deps| READY2((Ready))
-    FG[FeatureGate Generator] --> |no deps| READY3((Ready))
-    ROUTER[Router] --> |no deps| READY4((Ready))
+    ETCD[etcd] --> KAS[kube-apiserver]
+    FG[featuregate-generator] --> KAS
+    IGNITION[ignition-server] --> ROUTER[router]
+    IGNITION --> PROXY[ignition-server-proxy]
+    KARPENTER_OPERATOR[karpenter-operator] --> KARPENTER[karpenter]
 
-    READY2 --> KAS[kube-apiserver]
-    READY3 --> KAS
-
+    KAS --> |implicit dependency| PKI[PKI operator]
     KAS --> |implicit dependency| KCM[kube-controller-manager]
     KAS --> |implicit dependency| SCHED[kube-scheduler]
     KAS --> |implicit dependency| OAPI[openshift-apiserver]
     KAS --> |implicit dependency| CVO[CVO]
-    KAS --> |implicit dependency| ALL["All other<br/>components (~30)"]
+    KAS --> |implicit dependency| ALL["All other<br/>dependent components"]
 
-    style PKI fill:#c8e6c9
     style ETCD fill:#c8e6c9
     style FG fill:#c8e6c9
-    style ROUTER fill:#c8e6c9
+    style IGNITION fill:#c8e6c9
+    style KARPENTER_OPERATOR fill:#c8e6c9
     style KAS fill:#ffcc80
 ```
 
-KAS is an implicit dependency for all components **except**: etcd, featuregate-generator, control-plane-operator, cluster-api, capi-provider, karpenter, and router.
+KAS is an implicit dependency for all components **except**: etcd,
+featuregate-generator, control-plane-operator, cluster-api, capi-provider,
+karpenter, karpenter-operator, router, ignition-server, and
+ignition-server-proxy. Router and the ignition-server proxy both depend on the
+ignition server.
 
 ### Status Propagation
 
