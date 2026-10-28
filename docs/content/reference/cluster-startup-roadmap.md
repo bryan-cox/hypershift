@@ -10,7 +10,8 @@ self-managed Azure. ARO HCP is a managed service with a different provisioning
 path and is not covered here.
 
 For measured component timings and a real debugging example, see the
-[AWS startup observation for 5.0.0-rc.7](cluster-startup-aws-observation.md).
+[first AWS startup observation for 5.0.0-rc.7](cluster-startup-aws-observation.md)
+and the [repeat-run comparison](cluster-startup-aws-repeat.md).
 
 The roadmap is derived from the controllers in this repository. It is a
 debugging model, not a promise that reconciliation happens in a single serial
@@ -126,6 +127,14 @@ logs first. An AWS NAT gateway or IAM provisioning wait at this point is outside
 P0; it cannot appear in HostedCluster conditions because the object does not
 exist yet. The later `AWSCluster` resource represents the CAPI infrastructure
 object, not the start of this CLI provisioning work.
+
+An AWS `NatGatewayLimitExceeded` error is another example of a failure before
+P0. Check the NAT gateway quota and usage in the selected availability zone,
+including gateways being deleted. A failed create can leave a VPC, subnets,
+internet gateway, and allocated Elastic IP even though no HostedCluster exists.
+Preserve the failed attempt's infrastructure ID and logs, then clean up those
+resources before retrying; do not treat "no HostedCluster found" as proof that
+the create command allocated nothing.
 
 Record two clocks when evaluating the whole user experience:
 
@@ -457,6 +466,16 @@ it generates the bootstrap configuration and reconciles:
 - A CAPI `MachineDeployment` for `Replace` upgrades (the default)
 - A CAPI `MachineSet` for `InPlace` upgrades
 
+On AWS, `ValidGeneratedPayload=True` can coexist with
+`AWSSecurityGroupAvailable=False` (`DefaultSGNotReady`) and no Machines. The
+NodePool is waiting for the HostedCluster's default worker security group to be
+published in `status.platform.aws.defaultWorkerSecurityGroupID`. Check the
+HCP `ValidAWSIdentityProvider` and `AWSDefaultSecurityGroupCreated` conditions,
+CPO logs, and that HostedCluster status field before investigating ignition
+delivery or guest kubelet startup. The CPO waits for identity-provider
+validation before creating this security group; a ready `AWSCluster` alone does
+not prove the default worker security group is available.
+
 A new NodePool remains in an initial version rollout. `status.version` is set
 only after the CAPI workload rollout completes, so an empty `status.version`
 during initial provisioning is expected rather than evidence of corruption.
@@ -586,7 +605,8 @@ If monitoring is the remaining operator, inspect its Prometheus custom resource
 and CMO reconciliation tasks as well as its pods. Healthy existing pods do not
 prove every operand was created. A bootstrap dependency error can be followed by
 several minutes of availability validation before a retry creates the missing
-resource, as seen in the [AWS observation](cluster-startup-aws-observation.md#final-guest-operator-wait).
+resource, as seen in the [first AWS observation](cluster-startup-aws-observation.md#final-guest-operator-wait)
+and its [repeat run](cluster-startup-aws-repeat.md#monitoring-reproduced-the-same-final-wait).
 
 Inspect:
 
@@ -625,7 +645,7 @@ flowchart TD
     NPROW -- "no" --> P6CREATE["Create a NodePool<br/>or verify the intended NodePool was created"]
     NPROW -- "yes" --> NPREADY{"NodePool<br/>Ready=True?"}
     NPREADY -- "no" --> MACHINE{"CAPI Machine<br/>exists?"}
-    MACHINE -- "no" --> P6["P6 NodePool bootstrap<br/>kubeconfig, payload, CAPI workload"]
+    MACHINE -- "no" --> P6["P6 NodePool bootstrap<br/>kubeconfig, payload, worker security group,<br/>CAPI workload"]
     MACHINE -- "yes" --> IGN{"ReachedIgnitionEndpoint<br/>=True?"}
     IGN -- "no" --> P7["P7 Machine provisioning<br/>provider, machine, ignition path"]
     IGN -- "yes" --> P8["P8 Worker readiness<br/>AllMachinesReady / AllNodesHealthy"]

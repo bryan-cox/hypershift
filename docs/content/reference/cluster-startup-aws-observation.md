@@ -9,6 +9,10 @@ AWS HostedCluster created on 28 October 2026. It is a debugging example, not a
 performance baseline: it includes an operator rollout and a repaired OIDC
 credential configuration.
 
+The [second AWS startup and comparison](cluster-startup-aws-repeat.md) reused
+the corrected HO configuration. The OIDC repair described on this page belongs
+only to this first run.
+
 ## Run configuration
 
 | Setting | Value |
