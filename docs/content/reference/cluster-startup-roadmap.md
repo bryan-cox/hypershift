@@ -15,6 +15,14 @@ and the [two-cycle lifecycle comparison](cluster-startup-aws-repeat.md).
 For deletion stages, cleanup gates, and capture tooling, see the
 [AWS teardown roadmap](cluster-teardown-roadmap.md).
 
+For AI-guided setup or diagnosis, the repository includes the progressive
+disclosure skill `skills/hosted-cluster-lifecycle/SKILL.md`. It starts with target
+identification and the current readiness gates, then loads only the relevant
+stage and provider references. In a harness with the skill installed, invoke it
+with a request such as `$hosted-cluster-lifecycle: diagnose this incomplete HC
+from the supplied snapshots` or `$hosted-cluster-lifecycle: guide this AWS setup
+using my selected scripts and images`.
+
 The roadmap is derived from the controllers in this repository. It is a
 debugging model, not a promise that reconciliation happens in a single serial
 order. Several workstreams overlap:
