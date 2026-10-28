@@ -9,6 +9,9 @@ This page describes how a HostedCluster becomes ready, from the initial
 self-managed Azure. ARO HCP is a managed service with a different provisioning
 path and is not covered here.
 
+For measured component timings and a real debugging example, see the
+[AWS startup observation for 5.0.0-rc.7](cluster-startup-aws-observation.md).
+
 The roadmap is derived from the controllers in this repository. It is a
 debugging model, not a promise that reconciliation happens in a single serial
 order. Several workstreams overlap:
@@ -110,6 +113,28 @@ control-plane component is still becoming available.
 | P8 Worker readiness | Machines are ready and nodes are healthy | NodePool `Ready`, `AllMachinesReady`, `AllNodesHealthy` | CAPI Machine conditions and NodePool aggregate messages |
 | P9 Guest convergence | Guest CVO completes and ClusterOperators converge | HostedCluster `status.version`; guest CVO and ClusterOperators | Guest CVO, ClusterOperators, HCCO logs, HCP conditions |
 
+## Before P0: Provisioning inputs
+
+The roadmap clock starts when the HostedCluster API object is created. A create
+command can already be provisioning infrastructure before that point.
+For example, `hypershift create cluster aws` creates the VPC, subnets, NAT
+gateway, DNS zones, OIDC configuration, and IAM roles before submitting the
+HostedCluster, unless existing infrastructure and IAM inputs are supplied.
+
+If the collector says "Waiting for HostedCluster", inspect the create command's
+logs first. An AWS NAT gateway or IAM provisioning wait at this point is outside
+P0; it cannot appear in HostedCluster conditions because the object does not
+exist yet. The later `AWSCluster` resource represents the CAPI infrastructure
+object, not the start of this CLI provisioning work.
+
+Record two clocks when evaluating the whole user experience:
+
+- Command start to HostedCluster creation: infrastructure and identity setup.
+- HostedCluster creation to each readiness gate: the P0–P9 controller timeline.
+
+Start the collector before running the create script so it captures the first
+reconciliation after the object appears.
+
 ## P0: Intake and validation
 
 The HO validates the HostedCluster before it can create a usable control plane.
@@ -128,6 +153,21 @@ conditions include:
 If a blocking validation condition is false, the HO stops before the rest of
 the startup chain. This appears as a HostedCluster condition or a blocked
 `Progressing` reason, often before an HCP exists.
+
+Validation also continues after the initial scaffold. For example, OIDC
+document publication can fail after KAS has started, and AWS identity checks
+can remain `Unknown` until KAS is available. A later
+`ValidOIDCConfiguration=False` can therefore make P0 the first false gate while
+P1–P4 resources already exist. Read the condition message and HO logs; this
+does not mean those resources were removed or that startup is strictly serial.
+
+For an AWS OIDC upload failure, distinguish the two credential file formats:
+`create cluster aws --sts-creds` accepts STS JSON, while
+`install --oidc-storage-provider-s3-credentials` supplies a shared AWS INI
+profile to the HO SDK. Temporary credentials in that profile need
+`aws_session_token` as well as the access key and secret key. An HO log showing
+credential fallback to EC2 IMDS can indicate an unreadable or incorrectly
+formatted profile; it does not necessarily mean the STS session expired.
 
 Inspect:
 
@@ -193,6 +233,13 @@ oc get events -n "$HCP_NAMESPACE" --sort-by=.lastTimestamp
 
 An existing HCP only proves that the API object was created. It does not prove
 that the CPO is running or that the platform infrastructure is ready.
+
+On AWS, the `capi-provider` pod can initially wait for the
+`service-network-admin-kubeconfig` Secret. Its init container uses the guest API,
+so the pod can remain unready while P2–P4 proceed. A transient `FailedMount`
+event for that Secret is not by itself evidence that AWS credentials are wrong.
+Check whether KAS is still being bootstrapped before treating this as a separate
+provider failure.
 
 ## P2: Endpoint publication
 
@@ -306,6 +353,11 @@ condition. HCP availability separately performs a health check against the
 published KAS endpoint. A running pod with a broken Service, load balancer, DNS
 record, or network path can therefore pass the deployment check and fail the
 endpoint check.
+
+These signals can become true and then false again during initial component
+rollouts. Preserve the observations rather than using the latest condition's
+`lastTransitionTime` as the first-ever availability time. Distinguish first
+availability from the final rollout and the simultaneous completion checklist.
 
 Once the KAS component creates its kubeconfig Secret, the CPO publishes it in
 HCP status and the HO copies it to the HostedCluster namespace. NodePool
@@ -449,6 +501,12 @@ This is an important but narrow milestone:
 - It does not prove that a node registered.
 - It does not prove that kubelet is healthy.
 
+The OS can still be applying its first-boot MachineConfig and rebooting before
+kubelet starts and requests a certificate. In the AWS observation, console
+output showed Machine Config Daemon first-boot work after ignition was reached
+and before any guest CSR or Node existed. At this boundary, inspect boot
+progress rather than assuming that a missing Node means ignition failed.
+
 Inspect:
 
 ```bash
@@ -507,6 +565,8 @@ CVO becoming complete and the HostedCluster status reflecting it.
 
 Use this checklist for "fully complete":
 
+- Required HostedCluster validation conditions pass, with no blocking validation
+  condition false
 - HostedCluster `Available=True`
 - HCP `Available=True`
 - Every `ControlPlaneComponent` has `Available=True` and
@@ -521,6 +581,12 @@ Use this checklist for "fully complete":
   `Failing=False`
 - Every guest ClusterOperator has `Available=True`, `Progressing=False`, and
   `Degraded=False`
+
+If monitoring is the remaining operator, inspect its Prometheus custom resource
+and CMO reconciliation tasks as well as its pods. Healthy existing pods do not
+prove every operand was created. A bootstrap dependency error can be followed by
+several minutes of availability validation before a retry creates the missing
+resource, as seen in the [AWS observation](cluster-startup-aws-observation.md#final-guest-operator-wait).
 
 Inspect:
 
@@ -608,7 +674,8 @@ produce a shareable timeline. The collector:
   timeline
 - Highlights the first false stage and the next inspection target
 
-Start it immediately after creating the HostedCluster:
+Start it before running the create command. It waits for the HostedCluster to
+appear:
 
 ```bash
 ./hack/cluster-startup-timeline.py \
@@ -650,6 +717,9 @@ Timing caveats:
 - A single run is an observation, not a baseline. Record cloud, region, release,
   HostedCluster size, NodePool size, endpoint access, and management-cluster
   load with each dataset.
+- Record the HO image and source revision separately from the release CPO
+  image and source revision. The HO can run newer code than the release's CPO;
+  an observed difference from the code map may reflect that version difference.
 
 ## Code map
 
