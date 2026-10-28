@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hosted Cluster Lifecycle"
+  short_description: "Guide setup and diagnose incomplete hosted clusters"
+  default_prompt: "Use $hosted-cluster-lifecycle to identify the current startup gates and guide the next setup or debugging action."

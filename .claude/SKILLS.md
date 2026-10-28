@@ -104,6 +104,16 @@ This directory contains Claude Code skills that are automatically applied when w
 - Provides structured violation summaries for quick triage
 - Works without Konflux UI access
 
+### Hosted Cluster Lifecycle
+
+**Location:** `skills/hosted-cluster-lifecycle/` (canonical); `.claude/skills/hosted-cluster-lifecycle/` is a thin adapter.
+
+**Use when:** Guiding AWS or self-managed Azure setup, monitoring startup, or diagnosing an incomplete HostedCluster.
+
+The entrypoint identifies the target and readiness gates, then loads only the
+relevant control-plane, worker, guest, provider, or evidence reference. It also
+supports supplied offline captures and authorized teardown observation.
+
 ### Debug Cluster
 
 **Location:** `.claude/skills/debug-cluster/`
