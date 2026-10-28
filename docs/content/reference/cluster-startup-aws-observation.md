@@ -1,220 +1,177 @@
 ---
-title: AWS Startup Observation (5.0.0-rc.7)
+title: Clean AWS Startup Observation (5.0.0-rc.7)
 ---
 
-# AWS Startup Observation (5.0.0-rc.7)
+# Clean AWS Startup Observation (5.0.0-rc.7)
 
-This run validates the [startup roadmap](cluster-startup-roadmap.md) against an
-AWS HostedCluster created on 28 October 2026. It is a debugging example, not a
-performance baseline: it includes an operator rollout and a repaired OIDC
-credential configuration.
+This is clean cycle 1 of the [startup roadmap](cluster-startup-roadmap.md)
+validation. The dataset is `run-02`, created on 28 October 2026. The initial
+trial was excluded and its data removed; its timings do not contribute to
+this observation. The requested HO was healthy before creation, and no
+manual credential repair, HO rollout, or bootstrap intervention occurred
+during this startup. The management cluster and its image caches were warm.
 
-The [second AWS startup and comparison](cluster-startup-aws-repeat.md) reused
-the corrected HO configuration. The OIDC repair described on this page belongs
-only to this first run.
-
-## Run configuration
+## Configuration
 
 | Setting | Value |
 |---------|-------|
 | Release | `quay.io/openshift-release-dev/ocp-release:5.0.0-rc.7-multi` |
 | HO image | `quay.io/acm-d/rhtap-hypershift-operator@sha256:d7eb652dbbfac8ae9866b413c7125c86961a5cfb46396eb31774e0b3e171a3a5` |
-| HO source | `d1790a739bfc51d115968f11a93e66e87dc5ec7c` |
-| Release CPO source | `b9d6ae1c63453c012e889525eb924b3a07bac26b` |
-| AWS region / worker zone | `us-east-1` / `us-east-1a` |
+| Region / worker zone | `us-east-1` / `us-east-1a` |
 | Workers | Two `m5.large` instances, one NodePool |
-| Availability policies | Controller and infrastructure `SingleReplica` |
+| Availability | Controller and infrastructure `SingleReplica` |
 | Endpoint access | `Public` |
-| Management cluster | Nine Ready workers, Kubernetes `v1.34.2`; no existing HostedClusters |
-| HostedCluster creation (`t=0`) | `2026-10-28T19:15:46Z` |
+| HC creation (`t=0`) | `2026-10-28T20:09:30Z` |
 
-The copied AWS scripts installed HO and created the cluster. CLI infrastructure
-provisioning began at `19:15:17Z`, **29 seconds before** HostedCluster creation.
-That interval is outside the P0–P9 clock.
+A failed CLI attempt hit a NAT quota before this HC existed; its resources
+were cleaned before retrying. That event is outside the startup clock.
+The successful script began approximately 18 seconds before HC creation.
 
-The previous HO leader handled the first approximately 47 seconds while the
-requested image finished rolling out and acquired leadership. This limits timing
-comparisons for initial validation and scaffolding. The copied install script
-now waits for the rollout before returning.
+## Startup milestones
 
-## Milestones
+Times start at HC creation. `~` marks the first polling observation; other
+times use resource timestamps. The collector ran continuously with a
+ten-second polling delay plus query time and captured 83 observations.
 
-Times below are the first successful transitions captured in this run.
-`~` means the first polling observation rather than an API transition timestamp.
-The requested polling delay was ten seconds, plus query time. An early guest API
-discovery retry delayed one cycle; the collector was changed to direct API paths
-with short timeouts. Collector restarts retained the observations and recovered
-first-seen timestamps.
-
-| Stage | Milestone | Elapsed from HC creation |
-|-------|-----------|--------------------------|
-| P0 | Validation passed | 1s |
-| P1 | HostedControlPlane created | 2s |
-| P1 | Management operators deployed | 3s |
-| P2 | HCP InfrastructureReady | 28s |
+| Stage | Milestone | Elapsed |
+|-------|-----------|---------|
+| P0 | HostedCluster created | 0s |
+| P0 | Validation passed | 0s |
+| P1 | HostedControlPlane created | 0s |
+| P1 | Platform infrastructure object created | 0s |
+| P1 | CAPI Cluster created | 0s |
+| P1 | Management operators deployed | 4s |
+| P1 | Management operators available | 1m 25s |
+| P2 | HCP InfrastructureReady | 23s |
+| P3 | etcd available | 52s |
 | P3 | featuregate-generator ready | 33s |
-| P3 | etcd available | 1m 15s |
-| P4 | Kube API server available | 1m 40s |
-| P4 | HostedCluster kubeconfig published | ~2m 31s |
-| P6 | Node bootstrap payload generated | 4m 51s |
-| P5 | HostedControlPlane available | 5m 04s |
-| P5 | Control-plane rollout complete | 5m 52s |
-| P5 | HostedCluster available | 6m 37s |
-| P6 | MachineDeployment or MachineSet created | 8m 01s |
-| P7 | First CAPI Machine created | 8m 05s |
-| P7 | Ignition endpoint reached | 8m 29s |
-| P8 | All CAPI Machines ready | 12m 01s |
-| P8 | All CAPI Nodes healthy | 12m 01s |
-| P8 | NodePool ready | 12m 01s |
-| P9 | Guest ClusterVersion complete | 19m 19s |
-| P9 | HostedCluster version Completed | 19m 19s |
-| P9 | Guest ClusterOperators converged | 19m 02s |
-| P9 | Full completion checklist | ~19m 24s |
+| P4 | Kube API server available | 1m 20s |
+| P4 | HostedCluster kubeconfig published | ~58s |
+| P5 | HostedControlPlane available | 4m 32s |
+| P5 | HostedCluster available | 4m 32s |
+| P5 | Control-plane rollout complete | 5m 32s |
+| P6 | NodePool created | 0s |
+| P6 | Node bootstrap payload generated | 3m 13s |
+| P6 | MachineDeployment or MachineSet created | 5m 35s |
+| P7 | First CAPI Machine created | 5m 39s |
+| P7 | Ignition endpoint reached | 6m 04s |
+| P8 | All CAPI Machines ready | 9m 39s |
+| P8 | All CAPI Nodes healthy | 9m 39s |
+| P8 | NodePool ready | 9m 40s |
+| P9 | HostedCluster version Completed | 16m 59s |
+| P9 | Guest ClusterVersion complete | 16m 59s |
+| P9 | Guest ClusterOperators converged | 16m 34s |
+| P9 | Full completion checklist | ~17m 02s |
 
-```mermaid
-flowchart LR
-    HC["HC created<br/>0s"] --> KAS["KAS available<br/>1m40s"]
-    KAS --> CP["HCP available<br/>5m04s"]
-    CP --> FULL["Full checklist<br/>~19m 24s"]
-    HC --> OIDC["OIDC repair recovered<br/>7m47s"]
-    OIDC --> IGN["Ignition reached<br/>8m29s"]
-    IGN --> NP["NodePool ready<br/>12m01s"]
-    NP --> MON["Guest monitoring converges"]
-    MON --> FULL
-```
+## Observed gates
 
-This shows observed milestones and overlapping workstreams, rather than every
-controller dependency. HCP availability preceded OIDC recovery in this run.
+The release CPO revision is `b9d6ae1c63453c012e889525eb924b3a07bac26b`.
+Its AWS identity check in `control-plane-operator/controllers/healthcheck/aws.go`
+sets `ValidAWSIdentityProvider=Unknown` and returns no error when KAS is not
+available yet. `healthcheck_controller.go` then schedules the next check five
+minutes later, using its successful-check interval. This explains the
+approximately five-minute identity-validation wait in these observations;
+it is version-specific behavior and does not indicate a credential repair.
 
-## OIDC interruption and recovery
+`ValidOIDCConfiguration=True` was present from creation. Bootstrap payload
+generation at +3m13s preceded worker security-group readiness. CPO AWS
+identity-provider validation passed at +5m34s; the default worker security
+group and MachineDeployment followed at +5m35s. Machines were created at
++5m39s, ignition was reached at +6m04s, and the NodePool became ready at +9m40s.
 
-After the API started, `ValidOIDCConfiguration` became false at **+2m25s**.
-The HO could not upload OIDC documents to S3. Its logs showed credential
-resolution falling back to EC2 IMDS.
+Monitoring was the last guest operator to converge. Its initial reconciliation
+reported missing `cluster-monitoring-view` and `monitoring-alertmanager-edit`
+RBAC dependencies. Prometheus remained absent during a five-minute availability
+validation. The next reconciliation created `Prometheus/k8s` at +16m14s;
+monitoring converged at +16m34s without manual intervention. Guest CVO and HC
+version completion followed at +16m59s, and the full checklist was first
+observed at approximately +17m02s.
 
-The installation script had passed STS JSON to
-`--oidc-storage-provider-s3-credentials`, whose SDK input is a shared AWS INI
-profile. The STS session itself was valid. The copied script was changed to
-write an INI profile, including the session token, then reinstall and restart
-HO. OIDC validation recovered at **+7m47s**. Workers were provisioned after
-that recovery; these timings include the repair and are not a clean launch
-benchmark.
+## Control-plane components
 
-This explains an otherwise confusing state: HCP and HostedCluster availability
-could become true while OIDC validation still blocked worker setup. The
-roadmap's first false gate returned to P0 even though control-plane resources
-already existed.
+First successful transitions can be followed by later rollouts. Creation to
+availability measures API-object bootstrap, including dependency waits, rather
+than container startup time.
 
-## What the observation clarified
+| Component | First available | First rollout complete | Creation to available |
+|-----------|-----------------|------------------------|-----------------------|
+| `aws-cloud-controller-manager` | 1m 35s | 1m 35s | 1m 11s |
+| `capi-provider` | 1m 26s | 1m 31s | 1m 22s |
+| `catalog-operator` | 3m 31s | 3m 31s | 3m 06s |
+| `certified-operators-catalog` | 3m 31s | 3m 31s | 3m 06s |
+| `cloud-credential-operator` | 3m 57s | 3m 57s | 3m 33s |
+| `cluster-api` | 7s | 7s | 3s |
+| `cluster-autoscaler` | 1m 23s | 1m 23s | 30s |
+| `cluster-image-registry-operator` | 3m 31s | 3m 31s | 3m 07s |
+| `cluster-network-operator` | 3m 57s | 5m 30s | 3m 33s |
+| `cluster-node-tuning-operator` | 2m 17s | 2m 17s | 1m 53s |
+| `cluster-policy-controller` | 2m 17s | 2m 17s | 1m 53s |
+| `cluster-storage-operator` | 2m 37s | 3m 57s | 2m 13s |
+| `cluster-version-operator` | 2m 27s | 2m 27s | 2m 03s |
+| `community-operators-catalog` | 3m 31s | 3m 31s | 3m 06s |
+| `control-plane-operator` | 5s | 5s | 4s |
+| `control-plane-pki-operator` | 1m 26s | 1m 26s | 1m 03s |
+| `csi-snapshot-controller-operator` | 2m 38s | 2m 48s | 2m 14s |
+| `dns-operator` | 3m 30s | 3m 30s | 3m 06s |
+| `etcd` | 51s | 51s | 27s |
+| `featuregate-generator` | 26s | 33s | 2s |
+| `hosted-cluster-config-operator` | 2m 47s | 2m 47s | 2m 23s |
+| `ignition-server` | 28s | 28s | 3s |
+| `ignition-server-proxy` | 30s | 30s | 5s |
+| `ingress-operator` | 3m 57s | 3m 57s | 3m 33s |
+| `konnectivity-agent` | 1m 27s | 1m 27s | 1m 03s |
+| `kube-apiserver` | 1m 18s | 1m 18s | 54s |
+| `kube-controller-manager` | 1m 25s | 1m 29s | 1m 01s |
+| `kube-scheduler` | 1m 18s | 1m 23s | 54s |
+| `kube-storage-version-migrator` | 1m 29s | 1m 29s | 1m 04s |
+| `machine-approver` | 1m 26s | 1m 26s | 33s |
+| `oauth-openshift` | 1m 50s | 2m 20s | 1m 26s |
+| `olm-collect-profiles` | 1m 20s | 1m 20s | 55s |
+| `olm-operator` | 3m 31s | 3m 31s | 3m 06s |
+| `openshift-apiserver` | 1m 23s | 1m 44s | 59s |
+| `openshift-controller-manager` | 2m 18s | 2m 18s | 1m 54s |
+| `openshift-oauth-apiserver` | 1m 50s | 2m 20s | 1m 26s |
+| `openshift-route-controller-manager` | 1m 50s | 2m 19s | 1m 26s |
+| `packageserver` | 3m 31s | 3m 31s | 3m 06s |
+| `redhat-operators-catalog` | 4m 32s | 4m 32s | 4m 07s |
 
-- Cloud provisioning before HC creation needs a separate clock.
-- CAPA initially waited for `service-network-admin-kubeconfig`; its early
-  unready pod did not prevent endpoint publication, etcd, or KAS startup.
-- Ignition components started before KAS; most other components followed KAS.
-- NodePool payload generation overlapped control-plane convergence.
-- HCP availability, HostedCluster availability, worker readiness, and guest
-  convergence were distinct milestones.
-- After ignition was reached, worker consoles showed Machine Config Daemon
-  first-boot work and a reboot before Node registration. Ignition success did
-  not prove kubelet readiness.
-- Guest operators with unknown or missing conditions must remain pending;
-  completion requires explicit `Progressing=False` and `Degraded=False`.
+## Guest operators
 
-## Final guest-operator wait
+First convergence requires explicit `Available=True`, `Progressing=False`,
+and `Degraded=False`. Full completion requires all operators to converge in
+the same collection cycle, along with control-plane, worker, and version checks.
 
-After both workers became ready at **+12m01s**, monitoring was the last guest
-ClusterOperator to converge. Its first reconciliation hit missing RBAC
-dependencies: `monitoring-alertmanager-edit` for the Prometheus Alertmanager
-RoleBinding, and `cluster-monitoring-view` for Telemeter. Prometheus creation
-stopped before the Prometheus custom resource existed. The task still ran its
-availability validation, producing a five-minute wait before the retry at
-`19:34:18Z`.
+| Operator | First converged |
+|----------|-----------------|
+| `cloud-credential` | 3m 48s |
+| `console` | 11m 55s |
+| `csi-snapshot-controller` | 2m 47s |
+| `dns` | 11m 06s |
+| `image-registry` | 10m 58s |
+| `ingress` | 11m 53s |
+| `insights` | 9m 58s |
+| `kube-apiserver` | 2m 55s |
+| `kube-controller-manager` | 2m 55s |
+| `kube-scheduler` | 2m 55s |
+| `kube-storage-version-migrator` | 10m 21s |
+| `monitoring` | 16m 34s |
+| `network` | 10m 52s |
+| `node-tuning` | 9m 18s |
+| `openshift-apiserver` | 2m 55s |
+| `openshift-controller-manager` | 2m 55s |
+| `openshift-samples` | 11m 33s |
+| `operator-lifecycle-manager` | 3m 25s |
+| `operator-lifecycle-manager-catalog` | 3m 48s |
+| `operator-lifecycle-manager-packageserver` | 2m 55s |
+| `service-ca` | 10m 23s |
+| `storage` | 9m 50s |
 
-The retry created the missing resources and the Prometheus instance without
-manual intervention. Most monitoring pods had already been healthy during this
-wait. Inspecting only existing pods would have hidden the missing operand and
-the unfinished task. For this state, inspect the monitoring ClusterOperator,
-CMO task errors, and `oc get prometheuses -n openshift-monitoring` before
-assuming a scheduling or cloud credential problem.
+## Evidence
 
-## Control-plane component timings
+Normalized startup observations and logs are under
+`aws/startup-roadmap-aws-20261028/artifacts/run-02/` in the private scripts
+workspace. Credentials and kubeconfigs are ignored by git. These timings are
+an observation from one environment, not a performance distribution or SLO.
 
-These are each component's first captured `Available=True` and
-`RolloutComplete=True` condition transitions. They are separate from HCP
-aggregation and guest ClusterOperator convergence. A component can later roll
-again as configuration converges.
-
-| Component | First available | First rollout complete |
-|-----------|-----------------|------------------------|
-| `aws-cloud-controller-manager` | 1m 50s | 1m 50s |
-| `capi-provider` | 2m 25s | 3m 32s |
-| `catalog-operator` | 2m 55s | 2m 55s |
-| `certified-operators-catalog` | 2m 56s | 2m 56s |
-| `cloud-credential-operator` | 4m 00s | 4m 00s |
-| `cluster-api` | 7s | 7s |
-| `cluster-autoscaler` | 1m 41s | 1m 41s |
-| `cluster-image-registry-operator` | 3m 18s | 3m 18s |
-| `cluster-network-operator` | 4m 01s | 5m 08s |
-| `cluster-node-tuning-operator` | 2m 22s | 2m 22s |
-| `cluster-policy-controller` | 2m 22s | 2m 22s |
-| `cluster-storage-operator` | 2m 46s | 4m 01s |
-| `cluster-version-operator` | 2m 30s | 2m 30s |
-| `community-operators-catalog` | 2m 56s | 2m 56s |
-| `control-plane-operator` | 4s | 4s |
-| `control-plane-pki-operator` | 1m 45s | 1m 45s |
-| `csi-snapshot-controller-operator` | 2m 46s | 3m 18s |
-| `dns-operator` | 2m 54s | 2m 54s |
-| `etcd` | 1m 17s | 1m 17s |
-| `featuregate-generator` | 29s | 33s |
-| `hosted-cluster-config-operator` | 2m 54s | 2m 54s |
-| `ignition-server` | 31s | 31s |
-| `ignition-server-proxy` | 33s | 33s |
-| `ingress-operator` | 4m 02s | 4m 02s |
-| `konnectivity-agent` | 1m 46s | 1m 46s |
-| `kube-apiserver` | 1m 38s | 1m 38s |
-| `kube-controller-manager` | 1m 41s | 1m 48s |
-| `kube-scheduler` | 1m 41s | 1m 45s |
-| `kube-storage-version-migrator` | 1m 44s | 1m 44s |
-| `machine-approver` | 1m 45s | 1m 45s |
-| `oauth-openshift` | 1m 59s | 3m 59s |
-| `olm-collect-profiles` | 1m 40s | 1m 40s |
-| `olm-operator` | 2m 55s | 2m 55s |
-| `openshift-apiserver` | 1m 41s | 1m 54s |
-| `openshift-controller-manager` | 2m 23s | 2m 23s |
-| `openshift-oauth-apiserver` | 2m 00s | 2m 51s |
-| `openshift-route-controller-manager` | 1m 59s | 2m 22s |
-| `packageserver` | 2m 56s | 2m 56s |
-| `redhat-operators-catalog` | 4m 45s | 4m 45s |
-
-## Guest ClusterOperator convergence
-
-For each operator, this is the first captured state with `Available=True`,
-`Progressing=False`, and `Degraded=False`. The time is the latest of those three
-condition transitions, or the first observation if a timestamp was absent.
-An operator can later resume progressing as workers and configuration arrive;
-the full checklist requires all operators to converge at the same time.
-
-| Guest operator | First converged |
-|----------------|-----------------|
-| `cloud-credential` | 3m 45s |
-| `console` | 13m 46s |
-| `csi-snapshot-controller` | 2m 57s |
-| `dns` | 12m 58s |
-| `image-registry` | 3m 02s |
-| `ingress` | 13m 53s |
-| `insights` | 12m 19s |
-| `kube-apiserver` | 2m 59s |
-| `kube-controller-manager` | 2m 59s |
-| `kube-scheduler` | 2m 59s |
-| `kube-storage-version-migrator` | 12m 49s |
-| `monitoring` | 19m 02s |
-| `network` | 13m 14s |
-| `node-tuning` | 11m 40s |
-| `openshift-apiserver` | 2m 59s |
-| `openshift-controller-manager` | 2m 59s |
-| `openshift-samples` | 13m 42s |
-| `operator-lifecycle-manager` | 2m 57s |
-| `operator-lifecycle-manager-catalog` | 3m 28s |
-| `operator-lifecycle-manager-packageserver` | 2m 59s |
-| `service-ca` | 12m 50s |
-| `storage` | 12m 08s |
+The [clean lifecycle comparison](cluster-startup-aws-repeat.md) pairs this
+startup with its measured teardown and a second complete startup/teardown.

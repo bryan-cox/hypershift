@@ -10,8 +10,10 @@ self-managed Azure. ARO HCP is a managed service with a different provisioning
 path and is not covered here.
 
 For measured component timings and a real debugging example, see the
-[first AWS startup observation for 5.0.0-rc.7](cluster-startup-aws-observation.md)
-and the [repeat-run comparison](cluster-startup-aws-repeat.md).
+[clean AWS startup observation for 5.0.0-rc.7](cluster-startup-aws-observation.md)
+and the [two-cycle lifecycle comparison](cluster-startup-aws-repeat.md).
+For deletion stages, cleanup gates, and capture tooling, see the
+[AWS teardown roadmap](cluster-teardown-roadmap.md).
 
 The roadmap is derived from the controllers in this repository. It is a
 debugging model, not a promise that reconciliation happens in a single serial
@@ -476,6 +478,14 @@ delivery or guest kubelet startup. The CPO waits for identity-provider
 validation before creating this security group; a ready `AWSCluster` alone does
 not prove the default worker security group is available.
 
+For the observed `5.0.0-rc.7` CPO revision
+`b9d6ae1c63453c012e889525eb924b3a07bac26b`, the AWS health check returns no
+error when KAS is not available yet, while recording
+`ValidAWSIdentityProvider=Unknown`. The health-check controller then waits five
+minutes before its next check. This version-specific timer can explain a
+normal security-group wait after KAS becomes available; see the
+[clean AWS observation](cluster-startup-aws-observation.md#observed-gates).
+
 A new NodePool remains in an initial version rollout. `status.version` is set
 only after the CAPI workload rollout completes, so an empty `status.version`
 during initial provisioning is expected rather than evidence of corruption.
@@ -605,8 +615,7 @@ If monitoring is the remaining operator, inspect its Prometheus custom resource
 and CMO reconciliation tasks as well as its pods. Healthy existing pods do not
 prove every operand was created. A bootstrap dependency error can be followed by
 several minutes of availability validation before a retry creates the missing
-resource, as seen in the [first AWS observation](cluster-startup-aws-observation.md#final-guest-operator-wait)
-and its [repeat run](cluster-startup-aws-repeat.md#monitoring-reproduced-the-same-final-wait).
+resource, as seen in the [clean AWS observation](cluster-startup-aws-observation.md#observed-gates).
 
 Inspect:
 

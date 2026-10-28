@@ -403,8 +403,9 @@ nav:
     - 'Extending to Other Services': reference/ho-release-gating/extending-services.md
     - 'Operations and Troubleshooting': reference/ho-release-gating/troubleshooting.md
   - 'Hosted Cluster Startup Roadmap': reference/cluster-startup-roadmap.md
-  - 'AWS Startup Observation': reference/cluster-startup-aws-observation.md
-  - 'AWS Startup Repeat Run': reference/cluster-startup-aws-repeat.md
+  - 'Clean AWS Startup Observation': reference/cluster-startup-aws-observation.md
+  - 'Clean AWS Lifecycle Comparison': reference/cluster-startup-aws-repeat.md
+  - 'AWS Teardown Roadmap': reference/cluster-teardown-roadmap.md
   - "Infrastructure":
     - reference/infrastructure/index.md
     - "AWS": reference/infrastructure/aws.md
