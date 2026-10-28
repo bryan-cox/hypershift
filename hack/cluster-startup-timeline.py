@@ -499,12 +499,17 @@ class OcRunner:
         name: str | None = None,
         request_timeout: str = "15s",
     ) -> dict[str, Any] | None:
-        args = ["get", kind]
-        if name:
-            args.append(name)
-        if namespace:
-            args.extend(["-n", namespace])
-        args.extend(["-o", "json", "--ignore-not-found", f"--request-timeout={request_timeout}"])
+        if kind.startswith("/"):
+            # Known guest API paths avoid discovery retries while aggregated
+            # API servers are still starting.
+            args = ["get", f"--raw={kind}", f"--request-timeout={request_timeout}"]
+        else:
+            args = ["get", kind]
+            if name:
+                args.append(name)
+            if namespace:
+                args.extend(["-n", namespace])
+            args.extend(["-o", "json", "--ignore-not-found", f"--request-timeout={request_timeout}"])
         try:
             process = subprocess.run(
                 self._command(args),
@@ -533,7 +538,7 @@ class OcRunner:
     def secret_metadata(self, namespace: str) -> list[dict[str, Any]]:
         template = (
             '{{range .items}}{{.metadata.name}}{{"\\t"}}{{.metadata.creationTimestamp}}'
-            '{{"\\t"}}{{index .metadata.annotations "hypershift.openshift.io/ignition-reached"}}'
+            '{{"\\t"}}{{with .metadata.annotations}}{{index . "hypershift.openshift.io/ignition-reached"}}{{end}}'
             '{{"\\n"}}{{end}}'
         )
         args = [
@@ -608,9 +613,13 @@ def collect_guest(
     if guest_runner is None:
         return {"enabled": False, "error": "guest kubeconfig not supplied"}
     guest_runner.reset_errors()
-    cluster_version = guest_runner.get("clusterversion", name="version")
-    cluster_operators = guest_runner.get("clusteroperators")
-    nodes = guest_runner.get("nodes")
+    cluster_version = guest_runner.get(
+        "/apis/config.openshift.io/v1/clusterversions/version", request_timeout="5s"
+    )
+    cluster_operators = guest_runner.get(
+        "/apis/config.openshift.io/v1/clusteroperators", request_timeout="5s"
+    )
+    nodes = guest_runner.get("/api/v1/nodes", request_timeout="5s")
     guest = {
         "enabled": True,
         "clusterVersion": None,
@@ -1885,6 +1894,16 @@ def update_first_seen(snapshot: dict[str, Any], first_seen: dict[str, dict[str, 
             first_seen[name] = {"timestamp": collected_at}
 
 
+def restore_first_seen(observations_path: Path) -> dict[str, dict[str, str]]:
+    first_seen: dict[str, dict[str, str]] = {}
+    if observations_path.exists():
+        with observations_path.open(encoding="utf-8") as observations_file:
+            for line in observations_file:
+                if line.strip():
+                    update_first_seen(json.loads(line), first_seen)
+    return first_seen
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Collect a HostedCluster startup timeline.",
@@ -1956,7 +1975,7 @@ def main() -> int:
     guest_runner = (
         OcRunner(oc, args.guest_kubeconfig, None) if args.guest_kubeconfig else None
     )
-    first_seen: dict[str, dict[str, str]] = {}
+    first_seen = restore_first_seen(observations_path) if args.append else {}
     deadline = time.monotonic() + args.timeout
     last_snapshot: dict[str, Any] | None = None
     mode = "a" if args.append else "w"

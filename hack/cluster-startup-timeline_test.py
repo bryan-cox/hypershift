@@ -8,6 +8,7 @@ import importlib.util
 import io
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import textwrap
@@ -233,12 +234,40 @@ class ClusterStartupTimelineTest(unittest.TestCase):
         runner = timeline.OcRunner(self.fake_oc(data), None, None)
         return timeline.collect_snapshot(runner, None, "clusters", "example")
 
+    def test_restore_first_seen_preserves_earliest_observation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "observations.jsonl"
+            observations = [
+                {"collectedAt": "2026-01-01T00:01:00Z", "milestones": {"api": {"reached": False}}},
+                {"collectedAt": "2026-01-01T00:02:00Z", "milestones": {"api": {"reached": True}}},
+                {"collectedAt": "2026-01-01T00:03:00Z", "milestones": {"api": {"reached": True}}},
+            ]
+            path.write_text("\n".join(json.dumps(item) for item in observations) + "\n")
+            self.assertEqual(
+                timeline.restore_first_seen(path),
+                {"api": {"timestamp": "2026-01-01T00:02:00Z"}},
+            )
+
     def test_missing_hosted_cluster(self) -> None:
         snapshot = self.collect({})
         self.assertFalse(snapshot["hostedCluster"]["exists"])
         self.assertFalse(snapshot["milestones"]["hostedcluster_created"]["reached"])
         report = timeline.render_report(snapshot, {}, Path("/tmp/example-trace"))
         self.assertIn("Waiting for HostedCluster", report)
+
+    def test_guest_bootstrap_errors_preserve_other_observations(self) -> None:
+        runner = timeline.OcRunner("oc", "/tmp/guest.kubeconfig", None)
+        replies = [
+            subprocess.CompletedProcess([], 1, "", "ClusterVersion API is not ready"),
+            subprocess.CompletedProcess([], 1, "", "ClusterOperator API is not ready"),
+            subprocess.CompletedProcess([], 0, '{"items": []}', ""),
+        ]
+        with mock.patch.object(timeline.subprocess, "run", side_effect=replies):
+            guest = timeline.collect_guest(runner)
+        self.assertTrue(guest["enabled"])
+        self.assertIsNone(guest["clusterVersion"])
+        self.assertEqual(guest["nodes"], [])
+        self.assertEqual(len(guest["errors"]), 2)
 
     def test_startup_through_worker_readiness(self) -> None:
         snapshot = self.collect(fixture())
