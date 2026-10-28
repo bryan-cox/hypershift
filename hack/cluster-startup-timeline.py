@@ -1301,16 +1301,12 @@ def compute_milestones(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
             detail="guest checks were not evaluated",
         )
     elif all(item.get("reached") is True for item in full_results):
-        timestamps = [
-            parse_timestamp(item.get("timestamp"))
-            for item in full_results
-            if item.get("timestamp")
-        ]
-        timestamps = [timestamp for timestamp in timestamps if timestamp]
+        # Copied completion timestamps describe guest events, not when the HO
+        # published them. Time the simultaneous checklist by observation.
         milestones["fully_complete"] = result(
             True,
-            isoformat(max(timestamps)) if timestamps else None,
-            "full completion checklist",
+            source="full completion checklist",
+            timing_basis="first observed",
         )
     else:
         incomplete = [

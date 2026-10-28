@@ -329,6 +329,16 @@ class ClusterStartupTimelineTest(unittest.TestCase):
         milestones = timeline.compute_milestones(snapshot)
         self.assertTrue(milestones["fully_complete"]["reached"])
         self.assertEqual(milestones["guest_operators_converged"]["timestamp"], "2026-01-01T00:50:00Z")
+        # A copied CVO completion time must not backdate the full checklist.
+        snapshot["collectedAt"] = "2026-01-01T00:55:00Z"
+        snapshot["milestones"] = milestones
+        first_seen = {}
+        timeline.update_first_seen(snapshot, first_seen)
+        timestamp, observed = timeline.best_milestone_time(
+            milestones["fully_complete"], first_seen["fully_complete"]
+        )
+        self.assertTrue(observed)
+        self.assertEqual(timeline.isoformat(timestamp), "2026-01-01T00:55:00Z")
 
         snapshot["hostedCluster"]["conditions"]["ValidReleaseImage"] = condition("ValidReleaseImage", "Unknown")
         self.assertFalse(timeline.compute_milestones(snapshot)["fully_complete"]["reached"])
